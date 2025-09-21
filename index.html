@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seleccionar Categoría Principal</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .categoria-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2em;
+      margin: 2em;
+    }
+    .categoria-card {
+      background: #2c3e50;
+      border: 2px solid #3498db;
+      border-radius: 15px;
+      padding: 2em;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      color: white;
+    }
+    .categoria-card:hover {
+      background: #34495e;
+      border-color: #e74c3c;
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+    }
+    .categoria-titulo {
+      font-size: 1.5em;
+      font-weight: bold;
+      margin-bottom: 0.5em;
+      color: #3498db;
+    }
+    .categoria-descripcion {
+      font-size: 1em;
+      color: #bdc3c7;
+      margin-bottom: 1em;
+    }
+    .categoria-emoji {
+      font-size: 3em;
+      margin-bottom: 0.5em;
+    }
+  </style>
+</head>
+<body>
+  <h1>🏪 Seleccionar Categoría Principal</h1>
+  <p style="text-align: center; color: #7f8c8d;">Elige el tipo de productos que vas a vender:</p>
+  
+  <div class="categoria-container">
+    <div class="categoria-card" onclick="window.location.href='productos.html?categoria=bebidas'">
+      <div class="categoria-emoji">🥤</div>
+      <div class="categoria-titulo">Bebidas</div>
+      <div class="categoria-descripcion">Refrescos, cocteles, jugos y bebidas preparadas</div>
+    </div>
+    
+    <div class="categoria-card" onclick="window.location.href='productos.html?categoria=frutas'">
+      <div class="categoria-emoji">🍎</div>
+      <div class="categoria-titulo">Frutas</div>
+      <div class="categoria-descripcion">Frutas frescas, ensaladas y preparados de fruta</div>
+    </div>
+    
+    <div class="categoria-card" onclick="window.location.href='productos.html?categoria=snacks'">
+      <div class="categoria-emoji">🍿</div>
+      <div class="categoria-titulo">Snacks</div>
+      <div class="categoria-descripcion">Papitas, dulces, chocolates y aperitivos</div>
+    </div>
+    
+    <div class="categoria-card" onclick="window.location.href='productos.html?categoria=panaderia'">
+      <div class="categoria-emoji">🥖</div>
+      <div class="categoria-titulo">Panadería</div>
+      <div class="categoria-descripcion">Pan, pasteles, croissants y repostería</div>
+    </div>
+    
+    <div class="categoria-card" onclick="window.location.href='productos.html?categoria=vasos'">
+      <div class="categoria-emoji">🥤</div>
+      <div class="categoria-titulo">Vasos y Envases</div>
+      <div class="categoria-descripcion">Vasos, envases y contenedores para llevar</div>
+    </div>
+  </div>
+  
+  <div style="text-align: center; margin: 2em;">
+    <a href="ventas.html" style="color: #3498db; text-decoration: none;">
+      📊 Acceder al Dashboard de Ventas
+    </a>
+  </div>
+  
+  <script src="script.js"></script>
+</body>
+</html>

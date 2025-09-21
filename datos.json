@@ -1,0 +1,10 @@
+{
+  "ventas": [],
+  "casillas": [
+    { "nombre": "Manzana", "valor": 5.3 },
+    { "nombre": "Banana", "valor": 3 },
+    { "nombre": "Naranja", "valor": 4 },
+    { "nombre": "Pera", "valor": 2 },
+    { "nombre": "Uva", "valor": 6 }
+  ]
+}

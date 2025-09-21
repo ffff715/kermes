@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content          {
+            id: "cocacola",
+            nombre: "Coca-Cola",
+            emoji: "🥤",
+            precio: 2.00,
+            descripcion: "Refresco clásico",
+            tipo: "simple"
+          },
+          {
+            id: "fanta",
+            nombre: "Fanta Naranja",
+            emoji: "🍊",
+            precio: 2.00,
+            descripcion: "Refresco de naranja",
+            tipo: "simple"
+          },idth, initial-scale=1.0">
+  <title>Seleccionar Producto</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .productos-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5em;
+      margin: 2em;
+    }
+    .producto-card {
+      background: #2c3e50;
+      border: 2px solid #3498db;
+      border-radius: 10px;
+      padding: 1.5em;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      color: white;
+    }
+    .producto-card:hover {
+      background: #34495e;
+      border-color: #e74c3c;
+      transform: translateY(-3px);
+      box-shadow: 0 8px 15px rgba(0,0,0,0.3);
+    }
+    .producto-titulo {
+      font-size: 1.2em;
+      font-weight: bold;
+      margin-bottom: 0.5em;
+      color: #3498db;
+    }
+    .producto-precio {
+      font-size: 1.1em;
+      color: #e74c3c;
+      font-weight: bold;
+      margin-bottom: 0.5em;
+    }
+    .producto-descripcion {
+      font-size: 0.9em;
+      color: #bdc3c7;
+    }
+    .producto-emoji {
+      font-size: 2em;
+      margin-bottom: 0.5em;
+    }
+    .categoria-titulo {
+      text-align: center;
+      color: #3498db;
+      margin-bottom: 1em;
+    }
+    .boton-volver {
+      display: inline-block;
+      background: #95a5a6;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      text-decoration: none;
+      margin: 1em;
+      transition: background 0.3s;
+    }
+    .boton-volver:hover {
+      background: #7f8c8d;
+    }
+    .producto-preparado {
+      border-color: #f39c12;
+    }
+    .producto-preparado:hover {
+      border-color: #e67e22;
+    }
+    .preparado-badge {
+      background: #f39c12;
+      color: white;
+      padding: 3px 8px;
+      border-radius: 10px;
+      font-size: 0.8em;
+      margin-bottom: 0.5em;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+  <a href="index.html" class="boton-volver">← Volver a Categorías</a>
+  
+  <h1 id="categoriaTitulo" class="categoria-titulo">🍎 Productos</h1>
+  
+  <div id="productosContainer" class="productos-container">
+    <!-- Los productos se cargarán dinámicamente aquí -->
+  </div>
+  
+  <script>
+    // Configuración de productos por categoría
+    const PRODUCTOS_CONFIG = {
+      bebidas: {
+        titulo: "🥤 Bebidas",
+        productos: [
+          {
+            id: "cocacola",
+            nombre: "Coca Cola",
+            emoji: "🥤",
+            precio: 2.50,
+            descripcion: "Refresco de cola clásico",
+            tipo: "simple"
+          },
+          {
+            id: "fanta",
+            nombre: "Fanta Naranja",
+            emoji: "🍊",
+            precio: 2.30,
+            descripcion: "Refresco sabor naranja",
+            tipo: "simple"
+          },
+          {
+            id: "sprite",
+            nombre: "Sprite",
+            emoji: "🟢",
+            precio: 2.30,
+            descripcion: "Refresco de lima-limón",
+            tipo: "simple"
+          },
+          {
+            id: "agua",
+            nombre: "Agua Mineral",
+            emoji: "💧",
+            precio: 1.50,
+            descripcion: "Agua embotellada",
+            tipo: "simple"
+          },
+          {
+            id: "mojito",
+            nombre: "Mojito",
+            emoji: "🍃",
+            precio: 4.50,
+            descripcion: "Cóctel preparado con menta",
+            tipo: "preparado"
+          },
+          {
+            id: "caipirinha",
+            nombre: "Caipirinha",
+            emoji: "🍋",
+            precio: 5.00,
+            descripcion: "Cóctel brasileño preparado",
+            tipo: "preparado"
+          },
+          {
+            id: "sangria",
+            nombre: "Sangría",
+            emoji: "🍷",
+            precio: 4.00,
+            descripcion: "Bebida con vino y frutas",
+            tipo: "preparado"
+          }
+        ]
+      },
+      frutas: {
+        titulo: "🍎 Frutas",
+        productos: [
+          {
+            id: "manzana",
+            nombre: "Manzana",
+            emoji: "🍎",
+            precio: 1.20,
+            descripcion: "Manzana roja fresca",
+            tipo: "simple"
+          },
+          {
+            id: "banana",
+            nombre: "Banana",
+            emoji: "🍌",
+            precio: 0.80,
+            descripcion: "Banana amarilla madura",
+            tipo: "simple"
+          },
+          {
+            id: "naranja",
+            nombre: "Naranja",
+            emoji: "🍊",
+            precio: 1.00,
+            descripcion: "Naranja dulce jugosa",
+            tipo: "simple"
+          },
+          {
+            id: "ensalada_frutas",
+            nombre: "Ensalada de Frutas",
+            emoji: "🥗",
+            precio: 3.50,
+            descripcion: "Mix de frutas cortadas",
+            tipo: "preparado"
+          },
+          {
+            id: "smoothie",
+            nombre: "Smoothie Natural",
+            emoji: "🥤",
+            precio: 4.00,
+            descripcion: "Batido de frutas personalizables",
+            tipo: "preparado"
+          }
+        ]
+      },
+      snacks: {
+        titulo: "🍿 Snacks",
+        productos: [
+          {
+            id: "papitas",
+            nombre: "Papitas Fritas",
+            emoji: "🍟",
+            precio: 1.80,
+            descripcion: "Papitas saladas crujientes",
+            tipo: "simple"
+          },
+          {
+            id: "chocolate",
+            nombre: "Chocolate",
+            emoji: "🍫",
+            precio: 2.20,
+            descripcion: "Barra de chocolate con leche",
+            tipo: "simple"
+          },
+          {
+            id: "galletas",
+            nombre: "Galletas",
+            emoji: "🍪",
+            precio: 1.50,
+            descripcion: "Galletas dulces variadas",
+            tipo: "simple"
+          },
+          {
+            id: "mix_frutos",
+            nombre: "Mix de Frutos Secos",
+            emoji: "🥜",
+            precio: 3.00,
+            descripcion: "Mezcla personalizable",
+            tipo: "preparado"
+          }
+        ]
+      },
+      panaderia: {
+        titulo: "🥖 Panadería",
+        productos: [
+          {
+            id: "croissant",
+            nombre: "Croissant",
+            emoji: "🥐",
+            precio: 2.50,
+            descripcion: "Croissant de mantequilla",
+            tipo: "simple"
+          },
+          {
+            id: "pan_tostado",
+            nombre: "Pan Tostado",
+            emoji: "🍞",
+            precio: 1.80,
+            descripcion: "Pan tostado crujiente",
+            tipo: "simple"
+          },
+          {
+            id: "muffin",
+            nombre: "Muffin",
+            emoji: "🧁",
+            precio: 2.80,
+            descripcion: "Muffin de arándanos",
+            tipo: "simple"
+          },
+          {
+            id: "sandwich",
+            nombre: "Sandwich Personalizado",
+            emoji: "🥪",
+            precio: 4.50,
+            descripcion: "Sandwich con ingredientes a elegir",
+            tipo: "preparado"
+          }
+        ]
+      },
+      vasos: {
+        titulo: "🥤 Vasos y Envases",
+        productos: [
+          {
+            id: "vaso_basico",
+            nombre: "Vaso Básico",
+            emoji: "🥤",
+            precio: 0.50,
+            descripcion: "Vaso estándar de plástico",
+            tipo: "simple"
+          },
+          {
+            id: "vaso_premium",
+            nombre: "Vaso Premium",
+            emoji: "🍷",
+            precio: 1.00,
+            descripcion: "Vaso de mejor calidad",
+            tipo: "simple"
+          },
+          {
+            id: "vaso_ecologico",
+            nombre: "Vaso Ecológico",
+            emoji: "🌱",
+            precio: 0.80,
+            descripcion: "Vaso biodegradable",
+            tipo: "simple"
+          },
+          {
+            id: "envase_comida",
+            nombre: "Envase para Comida",
+            emoji: "📦",
+            precio: 1.20,
+            descripcion: "Envase para llevar comida",
+            tipo: "simple"
+          },
+          {
+            id: "botella_agua",
+            nombre: "Botella Reutilizable",
+            emoji: "🍼",
+            precio: 3.50,
+            descripcion: "Botella reutilizable de acero",
+            tipo: "simple"
+          },
+          {
+            id: "set_vasos",
+            nombre: "Set de Vasos",
+            emoji: "🥤",
+            precio: 4.00,
+            descripcion: "Pack personalizable de vasos",
+            tipo: "preparado"
+          }
+        ]
+      }
+    };
+
+    // Obtener categoría de la URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const categoria = urlParams.get('categoria');
+
+    // Cargar productos de la categoría
+    function cargarProductos() {
+      const config = PRODUCTOS_CONFIG[categoria];
+      if (!config) {
+        document.getElementById('categoriaTitulo').textContent = '❌ Categoría no encontrada';
+        return;
+      }
+
+      // Actualizar título
+      document.getElementById('categoriaTitulo').textContent = config.titulo;
+
+      // Cargar productos
+      const container = document.getElementById('productosContainer');
+      container.innerHTML = '';
+
+      config.productos.forEach(producto => {
+        const productoDiv = document.createElement('div');
+        productoDiv.className = `producto-card ${producto.tipo === 'preparado' ? 'producto-preparado' : ''}`;
+        
+        productoDiv.innerHTML = `
+          <div class="producto-emoji">${producto.emoji}</div>
+          ${producto.tipo === 'preparado' ? '<div class="preparado-badge">Personalizable</div>' : ''}
+          <div class="producto-titulo">${producto.nombre}</div>
+          <div class="producto-precio">€${producto.precio.toFixed(2)}</div>
+          <div class="producto-descripcion">${producto.descripcion}</div>
+        `;
+
+        // Evento click
+        productoDiv.onclick = () => {
+          if (producto.tipo === 'preparado') {
+            // Ir a página de personalización
+            window.location.href = `personalizar.html?categoria=${categoria}&producto=${producto.id}`;
+          } else if (categoria === 'vasos') {
+            // Vasos van a página especial con selector de cantidad
+            window.location.href = `vasos.html?categoria=${categoria}&producto=${producto.id}`;
+          } else {
+            // Productos simples van a opciones de venta
+            window.location.href = `opciones.html?categoria=${categoria}&producto=${producto.id}`;
+          }
+        };
+
+        container.appendChild(productoDiv);
+      });
+    }
+
+    // Inicializar página
+    cargarProductos();
+  </script>
+</body>
+</html>

@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Venta de Vasos</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .vasos-container {
+      max-width: 600px;
+      margin: 2em auto;
+      padding: 1em;
+    }
+    .producto-header {
+      background: #8e44ad;
+      color: white;
+      padding: 2em;
+      border-radius: 10px;
+      text-align: center;
+      margin-bottom: 2em;
+    }
+    .precio-total {
+      background: #27ae60;
+      color: white;
+      padding: 1.5em;
+      border-radius: 10px;
+      text-align: center;
+      font-size: 1.2em;
+      font-weight: bold;
+      margin-bottom: 1em;
+    }
+    .cantidad-selector {
+      background: #34495e;
+      padding: 2em;
+      border-radius: 10px;
+      margin-bottom: 2em;
+      color: white;
+      text-align: center;
+    }
+    .cantidad-controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1em;
+      margin: 1em 0;
+    }
+    .cantidad-btn {
+      background: #3498db;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      font-size: 1.2em;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .cantidad-btn:hover {
+      background: #2980b9;
+      transform: scale(1.1);
+    }
+    .cantidad-display {
+      background: #2c3e50;
+      color: white;
+      padding: 0.5em 1em;
+      border-radius: 8px;
+      font-size: 1.2em;
+      font-weight: bold;
+      min-width: 60px;
+    }
+    .botones-container {
+      display: flex;
+      gap: 1em;
+      justify-content: center;
+    }
+    .boton {
+      padding: 1em 2em;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1em;
+      font-weight: bold;
+      text-decoration: none;
+      display: inline-block;
+      text-align: center;
+      transition: all 0.3s;
+    }
+    .boton-volver {
+      background: #95a5a6;
+      color: white;
+    }
+    .boton-volver:hover {
+      background: #7f8c8d;
+    }
+    .boton-continuar {
+      background: #3498db;
+      color: white;
+    }
+    .boton-continuar:hover {
+      background: #2980b9;
+    }
+  </style>
+</head>
+<body>
+  <div class="vasos-container">
+    <div class="producto-header">
+      <div id="vasoEmoji" style="font-size: 3em; margin-bottom: 0.5em;">🥤</div>
+      <h1 id="vasoNombre">Vaso Básico</h1>
+      <p id="vasoDescripcion">Vaso estándar de plástico</p>
+      <p><strong>Precio unitario: €<span id="precioUnitario">0.50</span></strong></p>
+    </div>
+
+    <div class="cantidad-selector">
+      <h2 style="margin-top: 0;">📊 Seleccionar Cantidad</h2>
+      <p>¿Cuántos vasos quieres comprar?</p>
+      
+      <div class="cantidad-controls">
+        <button class="cantidad-btn" onclick="cambiarCantidad(-1)">−</button>
+        <div class="cantidad-display" id="cantidadDisplay">1</div>
+        <button class="cantidad-btn" onclick="cambiarCantidad(1)">+</button>
+      </div>
+    </div>
+
+    <div class="precio-total">
+      💰 Total: €<span id="precioTotal">0.50</span>
+    </div>
+
+    <div class="botones-container">
+      <button id="botonVolver" class="boton boton-volver">← Volver</button>
+      <button id="botonConfirmar" class="boton boton-continuar">Confirmar Venta →</button>
+    </div>
+  </div>
+
+  <script>
+    // Configuración de vasos
+    const VASOS_VENTA = {
+      "vaso_basico": { nombre: "Vaso Básico", emoji: "🥤", costo: 0.30, beneficio: 0.20, descripcion: "Vaso estándar de plástico" },
+      "vaso_premium": { nombre: "Vaso Premium", emoji: "🍷", costo: 0.60, beneficio: 0.40, descripcion: "Vaso de mejor calidad" },
+      "vaso_ecologico": { nombre: "Vaso Ecológico", emoji: "🌱", costo: 0.50, beneficio: 0.30, descripcion: "Vaso biodegradable" },
+      "envase_comida": { nombre: "Envase para Comida", emoji: "📦", costo: 0.80, beneficio: 0.40, descripcion: "Envase para llevar comida" },
+      "botella_agua": { nombre: "Botella Reutilizable", emoji: "🍼", costo: 2.50, beneficio: 1.00, descripcion: "Botella reutilizable de acero" }
+    };
+
+    // Variables globales
+    let vasoActual = null;
+    let categoria = null;
+    let vasoId = null;
+
+    // Configuración de API centralizada
+    const API_CONFIG = {
+      baseURL: 'http://localhost:5001',
+      getAPIEndpoint: function(endpoint) {
+        return `${this.baseURL}/api/${endpoint}`;
+      }
+    };
+    let cantidad = 1;
+
+    // Obtener parámetros de la URL
+    function obtenerParametrosURL() {
+      const urlParams = new URLSearchParams(window.location.search);
+      categoria = urlParams.get('categoria');
+      vasoId = urlParams.get('producto');
+    }
+
+    // Cargar información del vaso
+    function cargarVaso() {
+      vasoActual = VASOS_VENTA[vasoId];
+      if (!vasoActual) {
+        alert('Vaso no encontrado');
+        window.history.back();
+        return;
+      }
+
+      // Actualizar interfaz
+      document.getElementById('vasoEmoji').textContent = vasoActual.emoji;
+      document.getElementById('vasoNombre').textContent = vasoActual.nombre;
+      document.getElementById('vasoDescripcion').textContent = vasoActual.descripcion;
+      document.getElementById('precioUnitario').textContent = (vasoActual.costo + vasoActual.beneficio).toFixed(2);
+
+      calcularTotal();
+    }
+
+    // Cambiar cantidad
+    function cambiarCantidad(delta) {
+      cantidad = Math.max(1, cantidad + delta);
+      document.getElementById('cantidadDisplay').textContent = cantidad;
+      calcularTotal();
+    }
+
+    // Calcular precio total
+    function calcularTotal() {
+      const precioUnitario = vasoActual.costo + vasoActual.beneficio;
+      const total = precioUnitario * cantidad;
+      document.getElementById('precioTotal').textContent = total.toFixed(2);
+    }
+
+    // Event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+      obtenerParametrosURL();
+      cargarVaso();
+
+      // Botón volver
+      document.getElementById('botonVolver').onclick = () => {
+        window.location.href = `productos.html?categoria=${categoria}`;
+      };
+
+      // Botón confirmar
+      document.getElementById('botonConfirmar').onclick = () => {
+        const precioUnitario = vasoActual.costo + vasoActual.beneficio;
+        const precioTotal = precioUnitario * cantidad;
+        
+        // Crear objeto de venta
+        const venta = {
+          fecha: new Date().toISOString(),
+          categoria: categoria,
+          producto: `${vasoActual.nombre} x${cantidad}`,
+          emoji: vasoActual.emoji,
+          costo: vasoActual.costo * cantidad,
+          beneficio: vasoActual.beneficio * cantidad,
+          precioFinal: precioTotal,
+          tipo: 'vaso',
+          cantidad: cantidad,
+          precioUnitario: precioUnitario
+        };
+
+        // Enviar al servidor
+        fetch(API_CONFIG.getAPIEndpoint('ventas'), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(venta)
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert(`¡Venta confirmada!\n${vasoActual.emoji} ${vasoActual.nombre} x${cantidad}\nTotal: €${precioTotal.toFixed(2)}`);
+            window.location.href = 'index.html';
+          } else {
+            alert('Error al registrar la venta: ' + data.message);
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Error de conexión. Verifica que el servidor esté funcionando.');
+        });
+      };
+    });
+  </script>
+</body>
+</html>

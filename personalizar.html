@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Personalizar Producto</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .personalizacion-container {
+      max-width: 600px;
+      margin: 2em auto;
+      padding: 1em;
+    }
+    .producto-header {
+      background: #2c3e50;
+      color: white;
+      padding: 2em;
+      border-radius: 10px;
+      text-align: center;
+      margin-bottom: 2em;
+    }
+    .ajustes-seccion {
+      background: #34495e;
+      padding: 2em;
+      border-radius: 10px;
+      margin-bottom: 2em;
+      color: white;
+    }
+    .ajuste-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1em;
+      margin: 0.5em 0;
+      background: #2c3e50;
+      border-radius: 8px;
+    }
+    .ajuste-info {
+      display: flex;
+      align-items: center;
+      gap: 1em;
+    }
+    .ajuste-emoji {
+      font-size: 1.5em;
+    }
+    .ajuste-nombre {
+      font-weight: bold;
+    }
+    .ajuste-descripcion {
+      color: #bdc3c7;
+      font-size: 0.9em;
+    }
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 24px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: #4CAF50;
+    }
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+    .vasos-seccion {
+      background: #8e44ad;
+      padding: 2em;
+      border-radius: 10px;
+      margin-bottom: 2em;
+      color: white;
+    }
+    .vaso-option {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1em;
+      margin: 0.5em 0;
+      background: #9b59b6;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .vaso-option:hover {
+      background: #a569bd;
+    }
+    .vaso-option.selected {
+      background: #27ae60;
+      border: 2px solid #2ecc71;
+    }
+    .vaso-info {
+      display: flex;
+      align-items: center;
+      gap: 1em;
+    }
+    .vaso-precio {
+      font-weight: bold;
+      color: #f1c40f;
+    }
+    .precio-total {
+      background: #27ae60;
+      color: white;
+      padding: 1.5em;
+      border-radius: 10px;
+      text-align: center;
+      font-size: 1.2em;
+      font-weight: bold;
+      margin-bottom: 1em;
+    }
+    .botones-container {
+      display: flex;
+      gap: 1em;
+      justify-content: center;
+    }
+    .boton {
+      padding: 1em 2em;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1em;
+      font-weight: bold;
+      text-decoration: none;
+      display: inline-block;
+      text-align: center;
+      transition: all 0.3s;
+    }
+    .boton-volver {
+      background: #95a5a6;
+      color: white;
+    }
+    .boton-volver:hover {
+      background: #7f8c8d;
+    }
+    .boton-continuar {
+      background: #3498db;
+      color: white;
+    }
+    .boton-continuar:hover {
+      background: #2980b9;
+    }
+  </style>
+</head>
+<body>
+  <div class="personalizacion-container">
+    <div class="producto-header">
+      <div id="productoEmoji" style="font-size: 3em; margin-bottom: 0.5em;">🍃</div>
+      <h1 id="productoNombre">Mojito</h1>
+      <p id="productoDescripcion">Personaliza tu producto</p>
+    </div>
+
+    <div class="ajustes-seccion">
+      <h2 style="margin-top: 0;">🛠️ Ajustar Ingredientes</h2>
+      <div id="ajustesLista">
+        <!-- Los ajustes se cargarán dinámicamente aquí -->
+      </div>
+    </div>
+
+    <div class="vasos-seccion">
+      <h2 style="margin-top: 0;">🥤 Seleccionar Vaso/Envase</h2>
+      <div id="vasosLista">
+        <!-- Los vasos se cargarán dinámicamente aquí -->
+      </div>
+    </div>
+
+    <div class="precio-total">
+      💰 Precio Final: €<span id="precioTotal">4.50</span>
+    </div>
+
+    <div class="botones-container">
+      <button id="botonVolver" class="boton boton-volver">← Volver</button>
+      <button id="botonContinuar" class="boton boton-continuar">Confirmar Venta →</button>
+    </div>
+  </div>
+
+  <script>
+    // Configuración de productos preparados simplificada
+    const PRODUCTOS_PREPARADOS = {
+      mojito: {
+        nombre: "Mojito",
+        emoji: "🍃",
+        descripcion: "Cóctel refrescante personalizable",
+        costo: 3.00,
+        beneficio: 1.50, // Beneficio fijo
+        ajustes: [
+          {
+            id: "ron_blanco",
+            nombre: "Ron Blanco",
+            emoji: "🥃",
+            descripcion: "Base del mojito",
+            porDefecto: true  // INCLUIDO por defecto
+          },
+          {
+            id: "menta_fresca",
+            nombre: "Menta Fresca",
+            emoji: "🍃",
+            descripcion: "Hojas de menta aromáticas",
+            porDefecto: true  // INCLUIDO por defecto
+          },
+          {
+            id: "lima",
+            nombre: "Lima",
+            emoji: "🟢",
+            descripcion: "Jugo de lima fresco",
+            porDefecto: true  // INCLUIDO por defecto
+          },
+          {
+            id: "azucar_blanco",
+            nombre: "Azúcar Blanco",
+            emoji: "🧂",
+            descripcion: "Azúcar para endulzar",
+            porDefecto: true  // INCLUIDO por defecto
+          },
+          {
+            id: "agua_gas",
+            nombre: "Agua con Gas",
+            emoji: "💧",
+            descripcion: "Para completar la bebida",
+            porDefecto: true  // INCLUIDO por defecto
+          },
+          {
+            id: "hielo",
+            nombre: "Hielo",
+            emoji: "🧊",
+            descripcion: "Hielo picado fresco",
+            porDefecto: true  // INCLUIDO por defecto
+          }
+        ]
+      },
+      caipirinha: {
+        nombre: "Caipirinha",
+        emoji: "🍋",
+        descripcion: "Cóctel brasileño personalizable",
+        costo: 3.50,
+        beneficio: 1.50,
+        ajustes: [
+          {
+            id: "cachaca",
+            nombre: "Cachaça",
+            emoji: "🥃",
+            descripcion: "Destilado brasileño",
+            porDefecto: true
+          },
+          {
+            id: "lima_caipirinha",
+            nombre: "Lima",
+            emoji: "🟢",
+            descripcion: "Lima fresca cortada",
+            porDefecto: true
+          },
+          {
+            id: "azucar_moreno",
+            nombre: "Azúcar Moreno",
+            emoji: "�",
+            descripcion: "Azúcar de caña",
+            porDefecto: true
+          },
+          {
+            id: "hielo_picado",
+            nombre: "Hielo Picado",
+            emoji: "🧊",
+            descripcion: "Hielo picado fino",
+            porDefecto: true
+          }
+        ]
+      },
+      sangria: {
+        nombre: "Sangría",
+        emoji: "🍷",
+        descripcion: "Bebida tradicional personalizable",
+        costo: 2.80,
+        beneficio: 1.20,
+        ajustes: [
+          {
+            id: "vino_tinto",
+            nombre: "Vino Tinto",
+            emoji: "🍷",
+            descripcion: "Base de vino tinto",
+            porDefecto: true
+          },
+          {
+            id: "naranja",
+            nombre: "Naranja",
+            emoji: "�",
+            descripcion: "Rodajas de naranja",
+            porDefecto: true
+          },
+          {
+            id: "limon",
+            nombre: "Limón",
+            emoji: "🍋",
+            descripcion: "Rodajas de limón",
+            porDefecto: true
+          },
+          {
+            id: "manzana",
+            nombre: "Manzana",
+            emoji: "🍎",
+            descripcion: "Trozos de manzana",
+            porDefecto: true
+          },
+          {
+            id: "azucar_sangria",
+            nombre: "Azúcar",
+            emoji: "🧂",
+            descripcion: "Para endulzar",
+            porDefecto: true
+          }
+        ]
+      },
+      ensalada_frutas: {
+        nombre: "Ensalada de Frutas",
+        emoji: "🥗",
+        descripcion: "Mix de frutas personalizable",
+        costo: 2.50,
+        beneficio: 1.00,
+        ajustes: [
+          {
+            id: "manzana_ensalada",
+            nombre: "Manzana",
+            emoji: "🍎",
+            descripcion: "Trozos de manzana roja",
+            porDefecto: true
+          },
+          {
+            id: "banana_ensalada",
+            nombre: "Banana",
+            emoji: "🍌",
+            descripcion: "Rodajas de banana",
+            porDefecto: true
+          },
+          {
+            id: "naranja_ensalada",
+            nombre: "Naranja",
+            emoji: "�",
+            descripcion: "Gajos de naranja",
+            porDefecto: true
+          },
+          {
+            id: "uvas_ensalada",
+            nombre: "Uvas",
+            emoji: "🍇",
+            descripcion: "Uvas sin semilla",
+            porDefecto: true
+          }
+        ]
+      },
+      smoothie: {
+        nombre: "Smoothie Natural",
+        emoji: "🥤",
+        descripcion: "Batido personalizable",
+        costo: 2.80,
+        beneficio: 1.20,
+        ajustes: [
+          {
+            id: "base_leche",
+            nombre: "Base de Leche",
+            emoji: "🥛",
+            descripcion: "Leche o yogur",
+            porDefecto: true
+          },
+          {
+            id: "banana_smoothie",
+            nombre: "Banana",
+            emoji: "🍌",
+            descripcion: "Para cremosidad",
+            porDefecto: true
+          },
+          {
+            id: "fresas_smoothie",
+            nombre: "Fresas",
+            emoji: "🍓",
+            descripcion: "Fresas dulces",
+            porDefecto: true
+          },
+          {
+            id: "hielo_smoothie",
+            nombre: "Hielo",
+            emoji: "🧊",
+            descripcion: "Hielo para enfriar",
+            porDefecto: true
+          }
+        ]
+      },
+      mix_frutos: {
+        nombre: "Mix de Frutos Secos",
+        emoji: "🥜",
+        descripcion: "Mezcla personalizable",
+        costo: 2.20,
+        beneficio: 0.80,
+        ajustes: [
+          {
+            id: "almendras",
+            nombre: "Almendras",
+            emoji: "🌰",
+            descripcion: "Almendras tostadas",
+            porDefecto: true
+          },
+          {
+            id: "nueces",
+            nombre: "Nueces",
+            emoji: "🥜",
+            descripcion: "Nueces partidas",
+            porDefecto: true
+          },
+          {
+            id: "pasas",
+            nombre: "Pasas",
+            emoji: "�",
+            descripcion: "Pasas dulces",
+            porDefecto: true
+          }
+        ]
+      },
+      sandwich: {
+        nombre: "Sandwich Personalizado",
+        emoji: "🥪",
+        descripcion: "Sandwich a tu gusto",
+        costo: 3.20,
+        beneficio: 1.30,
+        ajustes: [
+          {
+            id: "pan_sandwich",
+            nombre: "Pan",
+            emoji: "🍞",
+            descripcion: "Pan fresco",
+            porDefecto: true
+          },
+          {
+            id: "jamon",
+            nombre: "Jamón",
+            emoji: "🥓",
+            descripcion: "Jamón cocido",
+            porDefecto: true
+          },
+          {
+            id: "queso",
+            nombre: "Queso",
+            emoji: "�",
+            descripcion: "Queso fundido",
+            porDefecto: true
+          },
+          {
+            id: "lechuga",
+            nombre: "Lechuga",
+            emoji: "🥬",
+            descripcion: "Lechuga fresca",
+            porDefecto: true
+          },
+          {
+            id: "tomate",
+            nombre: "Tomate",
+            emoji: "🍅",
+            descripcion: "Rodajas de tomate",
+            porDefecto: true
+          },
+          {
+            id: "mayonesa",
+            nombre: "Mayonesa",
+            emoji: "🥄",
+            descripcion: "Salsa mayonesa",
+            porDefecto: true
+          }
+        ]
+      },
+      agua: {
+        nombre: "Agua Mineral",
+        emoji: "💧",
+        descripcion: "Agua refrescante personalizable",
+        costo: 1.00,
+        beneficio: 0.50,
+        ajustes: [
+          {
+            id: "agua_fria",
+            nombre: "Agua Fría",
+            emoji: "❄️",
+            descripcion: "Agua bien fría",
+            porDefecto: true
+          },
+          {
+            id: "hielo_agua",
+            nombre: "Hielo Extra",
+            emoji: "🧊",
+            descripcion: "Cubos de hielo adicionales",
+            porDefecto: false
+          },
+          {
+            id: "limon_agua",
+            nombre: "Rodaja de Limón",
+            emoji: "🍋",
+            descripcion: "Rodaja de limón fresco",
+            porDefecto: false
+          }
+        ]
+      },
+      cocacola: {
+        nombre: "Coca-Cola",
+        emoji: "🥤",
+        descripcion: "Refresco clásico personalizable",
+        costo: 1.20,
+        beneficio: 0.80,
+        ajustes: [
+          {
+            id: "coca_fria",
+            nombre: "Coca-Cola Fría",
+            emoji: "❄️",
+            descripcion: "Bien fría de nevera",
+            porDefecto: true
+          },
+          {
+            id: "hielo_coca",
+            nombre: "Hielo Extra",
+            emoji: "🧊",
+            descripcion: "Cubos de hielo adicionales",
+            porDefecto: true
+          },
+          {
+            id: "limon_coca",
+            nombre: "Rodaja de Limón",
+            emoji: "🍋",
+            descripcion: "Un toque cítrico",
+            porDefecto: false
+          }
+        ]
+      },
+      fanta: {
+        nombre: "Fanta Naranja",
+        emoji: "🍊",
+        descripcion: "Refresco de naranja personalizable",
+        costo: 1.20,
+        beneficio: 0.80,
+        ajustes: [
+          {
+            id: "fanta_fria",
+            nombre: "Fanta Fría",
+            emoji: "❄️",
+            descripcion: "Bien fría de nevera",
+            porDefecto: true
+          },
+          {
+            id: "hielo_fanta",
+            nombre: "Hielo Extra",
+            emoji: "🧊",
+            descripcion: "Cubos de hielo adicionales",
+            porDefecto: true
+          },
+          {
+            id: "naranja_extra",
+            nombre: "Rodaja de Naranja",
+            emoji: "🍊",
+            descripcion: "Rodaja de naranja fresca",
+            porDefecto: false
+          }
+        ]
+      },
+      fanta: {
+        nombre: "Fanta Naranja",
+        emoji: "🍊",
+        descripcion: "Refresco de naranja personalizable",
+        costo: 1.20,
+        beneficio: 0.80,
+        ajustes: [
+          {
+            id: "fanta_fria",
+            nombre: "Fanta Fría",
+            emoji: "❄️",
+            descripcion: "Bien fría de nevera",
+            porDefecto: true
+          },
+          {
+            id: "hielo_fanta",
+            nombre: "Hielo Extra",
+            emoji: "🧊",
+            descripcion: "Cubos de hielo adicionales",
+            porDefecto: true
+          },
+          {
+            id: "naranja_extra",
+            nombre: "Rodaja de Naranja",
+            emoji: "🍊",
+            descripcion: "Rodaja de naranja fresca",
+            porDefecto: false
+          }
+        ]
+      },
+      sprite: {
+        nombre: "Sprite",
+        emoji: "🟢",
+        descripcion: "Refresco de lima-limón personalizable",
+        costo: 1.40,
+        beneficio: 0.90,
+        ajustes: [
+          {
+            id: "sprite_frio",
+            nombre: "Sprite Frío",
+            emoji: "❄️",
+            descripcion: "Bien frío de nevera",
+            porDefecto: true
+          },
+          {
+            id: "hielo_sprite",
+            nombre: "Hielo Extra",
+            emoji: "🧊",
+            descripcion: "Cubos de hielo adicionales",
+            porDefecto: true
+          },
+          {
+            id: "limon_sprite",
+            nombre: "Rodaja de Limón",
+            emoji: "🍋",
+            descripcion: "Un toque cítrico extra",
+            porDefecto: false
+          }
+        ]
+      },
+      manzana: {
+        nombre: "Manzana",
+        emoji: "🍎",
+        descripcion: "Manzana fresca personalizable",
+        costo: 0.70,
+        beneficio: 0.50,
+        ajustes: [
+          {
+            id: "manzana_lavada",
+            nombre: "Manzana Lavada",
+            emoji: "🍎",
+            descripcion: "Bien lavada y lista",
+            porDefecto: true
+          },
+          {
+            id: "manzana_cortada",
+            nombre: "Cortada en Trozos",
+            emoji: "🔪",
+            descripcion: "Cortada en trozos pequeños",
+            porDefecto: false
+          },
+          {
+            id: "sal_fruta",
+            nombre: "Sal de Fruta",
+            emoji: "🧂",
+            descripcion: "Pizca de sal especial",
+            porDefecto: false
+          }
+        ]
+      },
+      banana: {
+        nombre: "Banana",
+        emoji: "🍌",
+        descripcion: "Banana fresca personalizable",
+        costo: 0.50,
+        beneficio: 0.30,
+        ajustes: [
+          {
+            id: "banana_pelada",
+            nombre: "Banana Pelada",
+            emoji: "🍌",
+            descripcion: "Lista para comer",
+            porDefecto: true
+          },
+          {
+            id: "banana_cortada",
+            nombre: "Cortada en Rodajas",
+            emoji: "🔪",
+            descripcion: "Cortada en rodajas",
+            porDefecto: false
+          }
+        ]
+      },
+      naranja: {
+        nombre: "Naranja",
+        emoji: "🍊",
+        descripcion: "Naranja fresca personalizable",
+        costo: 0.60,
+        beneficio: 0.40,
+        ajustes: [
+          {
+            id: "naranja_pelada",
+            nombre: "Naranja Pelada",
+            emoji: "🍊",
+            descripcion: "Pelada y lista",
+            porDefecto: true
+          },
+          {
+            id: "naranja_gajos",
+            nombre: "Separada en Gajos",
+            emoji: "🔪",
+            descripcion: "Separada en gajos",
+            porDefecto: false
+          }
+        ]
+      },
+      papitas: {
+        nombre: "Papitas Fritas",
+        emoji: "🍟",
+        descripcion: "Papitas crujientes personalizables",
+        costo: 1.20,
+        beneficio: 0.60,
+        ajustes: [
+          {
+            id: "papitas_sal",
+            nombre: "Con Sal",
+            emoji: "🧂",
+            descripcion: "Sal clásica",
+            porDefecto: true
+          },
+          {
+            id: "papitas_ketchup",
+            nombre: "Ketchup",
+            emoji: "🍅",
+            descripcion: "Salsa de tomate",
+            porDefecto: false
+          },
+          {
+            id: "papitas_mayo",
+            nombre: "Mayonesa",
+            emoji: "🥄",
+            descripcion: "Mayonesa cremosa",
+            porDefecto: false
+          }
+        ]
+      },
+      chocolate: {
+        nombre: "Chocolate",
+        emoji: "🍫",
+        descripcion: "Chocolate personalizable",
+        costo: 1.50,
+        beneficio: 0.70,
+        ajustes: [
+          {
+            id: "chocolate_entero",
+            nombre: "Chocolate Entero",
+            emoji: "🍫",
+            descripcion: "Tableta completa",
+            porDefecto: true
+          },
+          {
+            id: "chocolate_trozos",
+            nombre: "En Trozos",
+            emoji: "🔪",
+            descripcion: "Troceado para compartir",
+            porDefecto: false
+          }
+        ]
+      },
+      galletas: {
+        nombre: "Galletas",
+        emoji: "🍪",
+        descripcion: "Galletas personalizables",
+        costo: 1.00,
+        beneficio: 0.50,
+        ajustes: [
+          {
+            id: "galletas_pack",
+            nombre: "Pack de Galletas",
+            emoji: "🍪",
+            descripcion: "Pack completo",
+            porDefecto: true
+          },
+          {
+            id: "leche_galletas",
+            nombre: "Con Leche",
+            emoji: "🥛",
+            descripcion: "Vaso de leche para mojar",
+            porDefecto: false
+          }
+        ]
+      },
+      croissant: {
+        nombre: "Croissant",
+        emoji: "🥐",
+        descripcion: "Croissant personalizable",
+        costo: 1.80,
+        beneficio: 0.70,
+        ajustes: [
+          {
+            id: "croissant_simple",
+            nombre: "Croissant Simple",
+            emoji: "🥐",
+            descripcion: "Natural y delicioso",
+            porDefecto: true
+          },
+          {
+            id: "mermelada",
+            nombre: "Con Mermelada",
+            emoji: "🍓",
+            descripcion: "Mermelada de fresa",
+            porDefecto: false
+          },
+          {
+            id: "mantequilla",
+            nombre: "Con Mantequilla",
+            emoji: "🧈",
+            descripcion: "Mantequilla fresca",
+            porDefecto: false
+          }
+        ]
+      },
+      pan_tostado: {
+        nombre: "Pan Tostado",
+        emoji: "🍞",
+        descripcion: "Pan tostado personalizable",
+        costo: 1.20,
+        beneficio: 0.60,
+        ajustes: [
+          {
+            id: "pan_tostado_simple",
+            nombre: "Pan Tostado",
+            emoji: "🍞",
+            descripcion: "Tostado perfecto",
+            porDefecto: true
+          },
+          {
+            id: "tomate_pan",
+            nombre: "Con Tomate",
+            emoji: "🍅",
+            descripcion: "Tomate rallado",
+            porDefecto: false
+          },
+          {
+            id: "aceite_pan",
+            nombre: "Con Aceite",
+            emoji: "🫒",
+            descripcion: "Aceite de oliva",
+            porDefecto: false
+          }
+        ]
+      },
+      muffin: {
+        nombre: "Muffin",
+        emoji: "🧁",
+        descripcion: "Muffin personalizable",
+        costo: 2.00,
+        beneficio: 0.80,
+        ajustes: [
+          {
+            id: "muffin_simple",
+            nombre: "Muffin",
+            emoji: "🧁",
+            descripcion: "Muffin esponjoso",
+            porDefecto: true
+          },
+          {
+            id: "muffin_calentado",
+            nombre: "Calentado",
+            emoji: "🔥",
+            descripcion: "Calentado en microondas",
+            porDefecto: false
+          }
+        ]
+      },
+      set_vasos: {
+        nombre: "Set de Vasos",
+        emoji: "🥤",
+        descripcion: "Pack personalizable de vasos",
+        costo: 2.50,
+        beneficio: 1.50,
+        ajustes: [
+          {
+            id: "vaso_basico_set",
+            nombre: "Vaso Básico x2",
+            emoji: "🥤",
+            descripcion: "2 vasos básicos incluidos",
+            porDefecto: true
+          },
+          {
+            id: "vaso_premium_set",
+            nombre: "Vaso Premium x1",
+            emoji: "🍷",
+            descripcion: "1 vaso premium adicional",
+            porDefecto: false
+          },
+          {
+            id: "vaso_ecologico_set",
+            nombre: "Vaso Ecológico x1",
+            emoji: "🌱",
+            descripcion: "1 vaso ecológico adicional",
+            porDefecto: false
+          },
+          {
+            id: "envase_extra",
+            nombre: "Envase para Comida",
+            emoji: "📦",
+            descripcion: "Envase adicional incluido",
+            porDefecto: false
+          }
+        ]
+      }
+    };
+
+    // Configuración de vasos/envases
+    const VASOS_CONFIG = [
+      {
+        id: "basico",
+        nombre: "Vaso Básico",
+        emoji: "🥤",
+        descripcion: "Vaso estándar incluido",
+        ajuste: 0.00,
+        porDefecto: true
+      },
+      {
+        id: "premium",
+        nombre: "Vaso Premium",
+        emoji: "🍷",
+        descripcion: "Vaso de mejor calidad",
+        ajuste: +0.50
+      },
+      {
+        id: "ecologico",
+        nombre: "Vaso Ecológico",
+        emoji: "🌱",
+        descripcion: "Vaso biodegradable",
+        ajuste: +0.30
+      },
+      {
+        id: "sin_vaso",
+        nombre: "Sin Vaso",
+        emoji: "🚫",
+        descripcion: "Cliente trae su propio vaso",
+        ajuste: -0.20
+      }
+    ];
+
+    // Variables globales
+    let currentProducto = null;
+    let currentCategoria = null;
+    let currentProductoId = null;
+    let vasoSeleccionado = "basico";
+
+    // Configuración de API centralizada
+    const API_CONFIG = {
+      baseURL: 'http://localhost:5001',
+      getAPIEndpoint: function(endpoint) {
+        return `${this.baseURL}/api/${endpoint}`;
+      }
+    };
+
+    // Obtener parámetros de la URL
+    function obtenerParametrosURL() {
+      const urlParams = new URLSearchParams(window.location.search);
+      currentCategoria = urlParams.get('categoria');
+      currentProductoId = urlParams.get('producto');
+    }
+
+    // Cargar configuración del producto
+    function cargarProducto() {
+      currentProducto = PRODUCTOS_PREPARADOS[currentProductoId];
+      if (!currentProducto) {
+        alert('Producto no encontrado');
+        window.history.back();
+        return;
+      }
+
+      // Actualizar header
+      document.getElementById('productoEmoji').textContent = currentProducto.emoji;
+      document.getElementById('productoNombre').textContent = currentProducto.nombre;
+      document.getElementById('productoDescripcion').textContent = currentProducto.descripcion;
+
+      // Cargar ajustes y vasos
+      cargarAjustes();
+      cargarVasos();
+      calcularPrecioTotal();
+    }
+
+    // Cargar lista de ajustes
+    function cargarAjustes() {
+      const container = document.getElementById('ajustesLista');
+      container.innerHTML = '';
+
+      currentProducto.ajustes.forEach(ajuste => {
+        const ajusteDiv = document.createElement('div');
+        ajusteDiv.className = 'ajuste-item';
+        
+        ajusteDiv.innerHTML = `
+          <div class="ajuste-info">
+            <div class="ajuste-emoji">${ajuste.emoji}</div>
+            <div>
+              <div class="ajuste-nombre">${ajuste.nombre}</div>
+              <div class="ajuste-descripcion">${ajuste.descripcion}</div>
+            </div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="ajuste-${ajuste.id}" ${ajuste.porDefecto ? 'checked' : ''} onchange="calcularPrecioTotal()">
+            <span class="slider"></span>
+          </label>
+        `;
+
+        container.appendChild(ajusteDiv);
+      });
+    }
+
+    // Cargar opciones de vasos
+    function cargarVasos() {
+      const container = document.getElementById('vasosLista');
+      container.innerHTML = '';
+
+      VASOS_CONFIG.forEach(vaso => {
+        const vasoDiv = document.createElement('div');
+        vasoDiv.className = `vaso-option ${vaso.porDefecto ? 'selected' : ''}`;
+        vasoDiv.onclick = () => seleccionarVaso(vaso.id);
+        
+        const precioTexto = vaso.ajuste === 0 ? 'Incluido' : 
+                           vaso.ajuste > 0 ? `+€${vaso.ajuste.toFixed(2)}` : 
+                           `€${vaso.ajuste.toFixed(2)}`;
+        
+        vasoDiv.innerHTML = `
+          <div class="vaso-info">
+            <div style="font-size: 1.5em;">${vaso.emoji}</div>
+            <div>
+              <div style="font-weight: bold;">${vaso.nombre}</div>
+              <div style="color: #ecf0f1; font-size: 0.9em;">${vaso.descripcion}</div>
+            </div>
+          </div>
+          <div class="vaso-precio">${precioTexto}</div>
+        `;
+
+        container.appendChild(vasoDiv);
+      });
+    }
+
+    // Seleccionar vaso
+    function seleccionarVaso(vasoId) {
+      vasoSeleccionado = vasoId;
+      
+      // Actualizar interfaz
+      document.querySelectorAll('.vaso-option').forEach(option => {
+        option.classList.remove('selected');
+      });
+      event.currentTarget.classList.add('selected');
+      
+      calcularPrecioTotal();
+    }
+
+    // Calcular precio total
+    function calcularPrecioTotal() {
+      const precioBase = currentProducto.costo + currentProducto.beneficio;
+      
+      // Ajuste del vaso
+      const vaso = VASOS_CONFIG.find(v => v.id === vasoSeleccionado);
+      const ajusteVaso = vaso ? vaso.ajuste : 0;
+      
+      const total = precioBase + ajusteVaso;
+      document.getElementById('precioTotal').textContent = total.toFixed(2);
+    }
+
+    // Obtener configuración seleccionada
+    function obtenerConfiguracion() {
+      const ajustesSeleccionados = [];
+      
+      currentProducto.ajustes.forEach(ajuste => {
+        const checkbox = document.getElementById(`ajuste-${ajuste.id}`);
+        if (checkbox && checkbox.checked) {
+          ajustesSeleccionados.push(ajuste.nombre);
+        }
+      });
+
+      const vaso = VASOS_CONFIG.find(v => v.id === vasoSeleccionado);
+      
+      return {
+        ajustes: ajustesSeleccionados,
+        vaso: vaso.nombre,
+        vasoAjuste: vaso.ajuste
+      };
+    }
+
+    // Event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+      obtenerParametrosURL();
+      cargarProducto();
+
+      // Botón volver
+      document.getElementById('botonVolver').onclick = () => {
+        window.location.href = `productos.html?categoria=${currentCategoria}`;
+      };
+
+      // Botón continuar - ir directo a confirmar venta
+      document.getElementById('botonContinuar').onclick = () => {
+        const config = obtenerConfiguracion();
+        const precioFinal = parseFloat(document.getElementById('precioTotal').textContent);
+        
+        // Crear objeto de venta directa
+        const venta = {
+          fecha: new Date().toISOString(),
+          categoria: currentCategoria,
+          producto: currentProducto.nombre,
+          emoji: currentProducto.emoji,
+          costo: currentProducto.costo,
+          beneficio: currentProducto.beneficio,
+          precioFinal: precioFinal,
+          tipo: 'preparado',
+          ajustes: config.ajustes,
+          vaso: config.vaso,
+          vasoAjuste: config.vasoAjuste
+        };
+
+        // Enviar al servidor
+        fetch(API_CONFIG.getAPIEndpoint('ventas'), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(venta)
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert(`¡Venta confirmada!\n${currentProducto.emoji} ${currentProducto.nombre}\nPrecio final: €${precioFinal.toFixed(2)}\nVaso: ${config.vaso}`);
+            window.location.href = 'index.html';
+          } else {
+            alert('Error al registrar la venta: ' + data.message);
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Error de conexión. Verifica que el servidor esté funcionando.');
+        });
+      };
+    });
+  </script>
+</body>
+</html>

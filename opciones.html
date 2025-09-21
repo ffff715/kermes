@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Opciones de Venta</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .producto-header {
+      background: #2c3e50;
+      color: white;
+      padding: 2em;
+      border-radius: 10px;
+      text-align: center;
+      margin-bottom: 2em;
+    }
+    .precio-display {
+      background: #27ae60;
+      color: white;
+      padding: 1.5em;
+      border-radius: 10px;
+      text-align: center;
+      font-size: 1.3em;
+      font-weight: bold;
+      margin-bottom: 2em;
+    }
+    .opciones-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5em;
+      margin-bottom: 2em;
+    }
+    .opcion-card {
+      background: #34495e;
+      border: 2px solid #3498db;
+      border-radius: 10px;
+      padding: 1.5em;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      color: white;
+    }
+    .opcion-card:hover {
+      background: #2c3e50;
+      border-color: #e74c3c;
+      transform: translateY(-3px);
+      box-shadow: 0 8px 15px rgba(0,0,0,0.3);
+    }
+    .opcion-titulo {
+      font-size: 1.2em;
+      font-weight: bold;
+      margin-bottom: 0.5em;
+      color: #3498db;
+    }
+    .opcion-porcentaje {
+      font-size: 1.1em;
+      color: #e74c3c;
+      font-weight: bold;
+      margin-bottom: 0.5em;
+    }
+    .opcion-precio {
+      font-size: 1.3em;
+      color: #f39c12;
+      font-weight: bold;
+    }
+    .ingredientes-seleccionados {
+      background: #34495e;
+      padding: 1em;
+      border-radius: 8px;
+      margin: 1em 0;
+      color: white;
+    }
+    .ingredientes-seleccionados h3 {
+      margin-top: 0;
+      color: #3498db;
+    }
+    .ingredientes-seleccionados ul {
+      margin: 0.5em 0;
+      padding-left: 1.5em;
+    }
+    .boton-volver {
+      display: inline-block;
+      background: #95a5a6;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      text-decoration: none;
+      margin: 1em 0;
+      transition: background 0.3s;
+    }
+    .boton-volver:hover {
+      background: #7f8c8d;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="producto-header">
+      <h1 id="tituloProducto">🍎 Producto</h1>
+    </div>
+
+    <div class="precio-display">
+      💰 Precio Base: €<span id="precioBase">0.00</span>
+    </div>
+
+    <h2 style="text-align: center; color: #2c3e50;">🎯 Selecciona tu margen de ganancia:</h2>
+    
+    <div class="opciones-container">
+      <div class="opcion-card" onclick="realizarVenta(10, 'Ganancia Baja')">
+        <div class="opcion-titulo">📈 Ganancia Baja</div>
+        <div class="opcion-porcentaje">+10%</div>
+        <div class="opcion-precio" id="precio10">€0.00</div>
+      </div>
+      
+      <div class="opcion-card" onclick="realizarVenta(25, 'Ganancia Media')">
+        <div class="opcion-titulo">📊 Ganancia Media</div>
+        <div class="opcion-porcentaje">+25%</div>
+        <div class="opcion-precio" id="precio25">€0.00</div>
+      </div>
+      
+      <div class="opcion-card" onclick="realizarVenta(40, 'Ganancia Alta')">
+        <div class="opcion-titulo">📈 Ganancia Alta</div>
+        <div class="opcion-porcentaje">+40%</div>
+        <div class="opcion-precio" id="precio40">€0.00</div>
+      </div>
+      
+      <div class="opcion-card" onclick="realizarVenta(60, 'Ganancia Máxima')">
+        <div class="opcion-titulo">🚀 Ganancia Máxima</div>
+        <div class="opcion-porcentaje">+60%</div>
+        <div class="opcion-precio" id="precio60">€0.00</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Configuración de productos simples por categoría (COSTO + BENEFICIO FIJO)
+    const PRODUCTOS_SIMPLES = {
+      bebidas: {
+        "cocacola": { nombre: "Coca Cola", emoji: "🥤", costo: 1.50, beneficio: 1.00 },
+        "fanta": { nombre: "Fanta Naranja", emoji: "🍊", costo: 1.40, beneficio: 0.90 },
+        "sprite": { nombre: "Sprite", emoji: "🟢", costo: 1.40, beneficio: 0.90 },
+        "agua": { nombre: "Agua Mineral", emoji: "💧", costo: 0.80, beneficio: 0.70 }
+      },
+      frutas: {
+        "manzana": { nombre: "Manzana", emoji: "🍎", costo: 0.70, beneficio: 0.50 },
+        "banana": { nombre: "Banana", emoji: "🍌", costo: 0.50, beneficio: 0.30 },
+        "naranja": { nombre: "Naranja", emoji: "🍊", costo: 0.60, beneficio: 0.40 }
+      },
+      snacks: {
+        "papitas": { nombre: "Papitas Fritas", emoji: "🍟", costo: 1.20, beneficio: 0.60 },
+        "chocolate": { nombre: "Chocolate", emoji: "🍫", costo: 1.50, beneficio: 0.70 },
+        "galletas": { nombre: "Galletas", emoji: "🍪", costo: 1.00, beneficio: 0.50 }
+      },
+      panaderia: {
+        "croissant": { nombre: "Croissant", emoji: "🥐", costo: 1.80, beneficio: 0.70 },
+        "pan_tostado": { nombre: "Pan Tostado", emoji: "🍞", costo: 1.20, beneficio: 0.60 },
+        "muffin": { nombre: "Muffin", emoji: "🧁", costo: 2.00, beneficio: 0.80 }
+      },
+      vasos: {
+        "vaso_basico": { nombre: "Vaso Básico", emoji: "🥤", costo: 0.30, beneficio: 0.20 },
+        "vaso_premium": { nombre: "Vaso Premium", emoji: "🍷", costo: 0.60, beneficio: 0.40 },
+        "vaso_ecologico": { nombre: "Vaso Ecológico", emoji: "🌱", costo: 0.50, beneficio: 0.30 },
+        "envase_comida": { nombre: "Envase para Comida", emoji: "📦", costo: 0.80, beneficio: 0.40 },
+        "botella_agua": { nombre: "Botella Reutilizable", emoji: "🍼", costo: 2.50, beneficio: 1.00 }
+      }
+    };
+
+    // Variables globales para el producto actual
+    let productoActual = null;
+    let categoria = null;
+    let esPersonalizado = false;
+
+    // Configuración de API centralizada
+    const API_CONFIG = {
+      baseURL: 'http://localhost:5001',
+      getAPIEndpoint: function(endpoint) {
+        return `${this.baseURL}/api/${endpoint}`;
+      },
+      // Función para verificar conectividad
+      verificarConexion: async function() {
+        try {
+          const response = await fetch(`${this.baseURL}/api/ventas`, { 
+            method: 'GET',
+            timeout: 5000 
+          });
+          return response.ok;
+        } catch (error) {
+          console.warn('❌ Sin conexión al servidor, usando modo offline');
+          return false;
+        }
+      }
+    };
+
+    // Inicializar página
+    function inicializarPagina() {
+      const urlParams = new URLSearchParams(window.location.search);
+      categoria = urlParams.get('categoria');
+      const productoId = urlParams.get('producto');
+      esPersonalizado = urlParams.get('personalizado') === 'true';
+
+      if (esPersonalizado) {
+        // Cargar producto personalizado desde localStorage
+        const productoPersonalizado = localStorage.getItem('productoPersonalizado');
+        if (productoPersonalizado) {
+          productoActual = JSON.parse(productoPersonalizado);
+          actualizarInterfazPersonalizado();
+        } else {
+          alert('Error: No se encontró la información del producto personalizado');
+          window.history.back();
+        }
+      } else {
+        // Cargar producto simple
+        if (categoria && productoId && PRODUCTOS_SIMPLES[categoria] && PRODUCTOS_SIMPLES[categoria][productoId]) {
+          productoActual = PRODUCTOS_SIMPLES[categoria][productoId];
+          productoActual.categoria = categoria;
+          productoActual.productoId = productoId;
+          actualizarInterfazSimple();
+        } else {
+          alert('Producto no encontrado');
+          window.history.back();
+        }
+      }
+
+      // Actualizar precios en las opciones
+      actualizarPrecios();
+    }
+
+    // Actualizar interfaz para producto simple
+    function actualizarInterfazSimple() {
+      const precioFinal = productoActual.costo + productoActual.beneficio;
+      
+      document.getElementById('tituloProducto').innerHTML = `${productoActual.emoji} ${productoActual.nombre}`;
+      document.getElementById('precioBase').textContent = `${precioFinal.toFixed(2)} (Costo: €${productoActual.costo.toFixed(2)} + Beneficio: €${productoActual.beneficio.toFixed(2)})`;
+      
+      // Cambiar el texto del precio display
+      document.querySelector('.precio-display').innerHTML = `💰 Precio Final Fijo: €${precioFinal.toFixed(2)}`;
+      
+      // Ocultar las opciones de margen ya que el precio es fijo
+      const opcionesContainer = document.querySelector('.opciones-container');
+      
+      // Productos que se pueden personalizar - TODOS ahora son personalizables
+      const productosPersonalizables = Object.keys(PRODUCTOS_SIMPLES).reduce((todos, categoria) => {
+        return todos.concat(Object.keys(PRODUCTOS_SIMPLES[categoria]));
+      }, []);
+      const puedePersonalizar = productosPersonalizables.includes(productoActual.productoId);
+      
+      let opcionesHTML = `
+        <div class="opcion-card" onclick="confirmarVentaSimple()" style="max-width: 400px; margin: 0 auto;">
+          <div class="opcion-titulo">✅ Confirmar Venta</div>
+          <div class="opcion-precio">€${precioFinal.toFixed(2)}</div>
+          <div style="color: #bdc3c7; font-size: 0.9em;">Precio fijo con beneficio incluido</div>
+        </div>
+      `;
+      
+      if (puedePersonalizar) {
+        opcionesHTML += `
+          <div class="opcion-card" onclick="irAPersonalizar()" style="max-width: 400px; margin: 0 auto; background: #3498db; border-color: #3498db;">
+            <div class="opcion-titulo">🛠️ Personalizar</div>
+            <div class="opcion-precio">Elegir vaso y extras</div>
+            <div style="color: #ecf0f1; font-size: 0.9em;">Hielo, limón, tipo de vaso...</div>
+          </div>
+        `;
+      }
+      
+      opcionesContainer.innerHTML = opcionesHTML;
+      
+      // Añadir botón para volver a productos
+      const volverBtn = document.createElement('a');
+      volverBtn.href = `productos.html?categoria=${categoria}`;
+      volverBtn.className = 'boton-volver';
+      volverBtn.innerHTML = '← Volver a Productos';
+      
+      const container = document.querySelector('.container');
+      container.insertBefore(volverBtn, container.firstChild);
+    }
+
+    // Actualizar interfaz para producto personalizado
+    function actualizarInterfazPersonalizado() {
+      document.getElementById('tituloProducto').innerHTML = `${productoActual.emoji} ${productoActual.nombre} (Personalizado)`;
+      document.getElementById('precioBase').textContent = productoActual.precio.toFixed(2);
+      
+      // Mostrar ingredientes seleccionados
+      const ingredientesDiv = document.createElement('div');
+      ingredientesDiv.className = 'ingredientes-seleccionados';
+      
+      let ingredientesHTML = '<h3>🛠️ Ingredientes Seleccionados:</h3><ul>';
+      productoActual.ingredientes.forEach(ing => {
+        ingredientesHTML += `<li>${ing.nombre} ${ing.precio > 0 ? `(+€${ing.precio.toFixed(2)})` : ''}</li>`;
+      });
+      ingredientesHTML += '</ul>';
+      
+      ingredientesDiv.innerHTML = ingredientesHTML;
+      
+      const precioDiv = document.querySelector('.precio-display');
+      precioDiv.parentNode.insertBefore(ingredientesDiv, precioDiv.nextSibling);
+      
+      // Añadir botones de navegación
+      const botonesDiv = document.createElement('div');
+      botonesDiv.style.cssText = 'display: flex; gap: 1em; margin: 1em 0; justify-content: center;';
+      botonesDiv.innerHTML = `
+        <a href="productos.html?categoria=${categoria}" class="boton-volver">← Productos</a>
+        <a href="personalizar.html?categoria=${categoria}&producto=${productoActual.productoId}" style="background: #f39c12; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none;">🛠️ Modificar</a>
+      `;
+      
+      const container = document.querySelector('.container');
+      container.insertBefore(botonesDiv, container.firstChild);
+    }
+
+    // Actualizar precios en las opciones
+    function actualizarPrecios() {
+      if (!productoActual) return;
+      
+      const precioBase = productoActual.precio;
+      document.getElementById('precio10').textContent = `€${(precioBase * 1.10).toFixed(2)}`;
+      document.getElementById('precio25').textContent = `€${(precioBase * 1.25).toFixed(2)}`;
+      document.getElementById('precio40').textContent = `€${(precioBase * 1.40).toFixed(2)}`;
+      document.getElementById('precio60').textContent = `€${(precioBase * 1.60).toFixed(2)}`;
+    }
+
+    // Función para ir a personalizar
+    function irAPersonalizar() {
+      window.location.href = `personalizar.html?categoria=${categoria}&producto=${productoActual.productoId}`;
+    }
+
+    // Función para confirmar venta simple
+    function confirmarVentaSimple() {
+      if (!productoActual) {
+        alert('Error: No hay producto seleccionado');
+        return;
+      }
+
+      const precioFinal = productoActual.costo + productoActual.beneficio;
+
+      const venta = {
+        fecha: new Date().toISOString(),
+        categoria: categoria,
+        producto: productoActual.nombre,
+        emoji: productoActual.emoji,
+        costo: productoActual.costo,
+        beneficio: productoActual.beneficio,
+        precioFinal: precioFinal,
+        tipo: 'simple'
+      };
+
+      // Enviar al servidor
+      fetch(API_CONFIG.getAPIEndpoint('ventas'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(venta)
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert(`¡Venta confirmada!\n${productoActual.emoji} ${productoActual.nombre}\nPrecio final: €${precioFinal.toFixed(2)}`);
+          window.location.href = 'index.html';
+        } else {
+          alert('Error al registrar la venta: ' + data.message);
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Error de conexión. Verifica que el servidor esté funcionando.');
+      });
+    }
+
+    // Función para realizar venta (adaptada para ambos tipos)
+    function realizarVenta(porcentaje, decision) {
+      if (!productoActual) {
+        alert('Error: No hay producto seleccionado');
+        return;
+      }
+
+      const precioBase = productoActual.precio;
+      const incremento = precioBase * (porcentaje / 100);
+      const precioFinal = precioBase + incremento;
+
+      const venta = {
+        fecha: new Date().toISOString(),
+        categoria: productoActual.categoria || categoria,
+        producto: productoActual.nombre,
+        emoji: productoActual.emoji,
+        precioBase: precioBase,
+        porcentaje: porcentaje,
+        incremento: incremento,
+        precioFinal: precioFinal,
+        decision: decision,
+        tipo: esPersonalizado ? 'preparado' : 'simple'
+      };
+
+      // Si es personalizado, añadir información de ingredientes
+      if (esPersonalizado && productoActual.ingredientes) {
+        venta.ingredientes = productoActual.ingredientes;
+        venta.productoId = productoActual.productoId;
+      }
+
+      // Enviar al servidor
+      fetch(API_CONFIG.getAPIEndpoint('ventas'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(venta)
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert(`¡Venta registrada!\n${productoActual.emoji} ${productoActual.nombre}\nPrecio final: €${precioFinal.toFixed(2)}`);
+          
+          // Limpiar localStorage si era personalizado
+          if (esPersonalizado) {
+            localStorage.removeItem('productoPersonalizado');
+          }
+          
+          // Volver a la página principal
+          window.location.href = 'index.html';
+        } else {
+          alert('Error al registrar la venta: ' + data.message);
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Error de conexión. Verifica que el servidor esté funcionando.');
+      });
+    }
+
+    // Inicializar cuando se carga la página
+    document.addEventListener('DOMContentLoaded', inicializarPagina);
+  </script>
+</body>
+</html>

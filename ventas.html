@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard de Ventas - PRIVADO</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { background: #2c2c2c; color: white; font-family: Arial, sans-serif; }
+    .login-screen { 
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+      background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; 
+      z-index: 1000;
+    }
+    .login-box { 
+      background: #3c3c3c; padding: 2em; border-radius: 10px; text-align: center; 
+      border: 2px solid #555; box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    }
+    .login-box input { 
+      background: #555; color: white; border: 1px solid #777; padding: 0.8em; 
+      margin: 0.5em; font-size: 1.2em; border-radius: 5px; text-align: center;
+    }
+    .login-box button { 
+      background: #4caf50; color: white; border: none; padding: 0.8em 2em; 
+      font-size: 1.2em; border-radius: 5px; cursor: pointer; margin: 0.5em;
+    }
+    .login-box button:hover { background: #45a049; }
+    .error { color: #f44336; margin-top: 0.5em; }
+    .main-content { display: none; }
+    .dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 1em; margin: 1em 0; }
+    .stat-box { background: #3c3c3c; border: 1px solid #555; padding: 1em; border-radius: 5px; }
+    .stat-number { font-size: 2em; font-weight: bold; color: #4caf50; }
+    .productos-table { background: #3c3c3c; border: 1px solid #555; padding: 1em; border-radius: 5px; margin: 1em 0; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #555; padding: 0.5em; text-align: center; }
+    th { background: #4c4c4c; }
+    .beneficio { color: #4caf50; }
+    .coste { color: #f44336; }
+    .config { background: #1a1a2e; padding: 1em; border-radius: 5px; margin: 1em 0; }
+    input { background: #555; color: white; border: 1px solid #777; padding: 0.3em; }
+    .logout-btn { 
+      position: fixed; top: 10px; right: 10px; background: #f44336; 
+      border: none; color: white; padding: 0.5em 1em; border-radius: 5px; cursor: pointer;
+    }
+    .venta-detalle { 
+      background: #2a2a2a; border: 1px solid #555; margin: 0.5em 0; 
+      padding: 1em; border-radius: 5px; border-left: 4px solid #4caf50;
+    }
+    .venta-header { 
+      font-weight: bold; color: #4caf50; margin-bottom: 0.5em; 
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .venta-items { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5em; margin: 0.5em 0; }
+    .venta-total { text-align: right; font-weight: bold; color: #81c784; }
+  </style>
+</head>
+<body>
+  <!-- Pantalla de login -->
+  <div id="loginScreen" class="login-screen">
+    <div class="login-box">
+      <h2>🔒 Acceso Restringido</h2>
+      <p>Introduce la contraseña para acceder al dashboard</p>
+      <input type="password" id="passwordInput" placeholder="Contraseña" maxlength="50">
+      <br>
+      <button onclick="verificarPassword()">Entrar</button>
+      <div id="errorMessage" class="error"></div>
+    </div>
+  </div>
+
+  <!-- Contenido principal (oculto inicialmente) -->
+  <div id="mainContent" class="main-content">
+    <button class="logout-btn" onclick="cerrarSesion()">🚪 Cerrar Sesión</button>
+    
+    <h1>📊 Dashboard de Ventas</h1>
+  
+  <div class="config">
+    <h3>⚙️ Configuración</h3>
+    <label>Porcentaje de Beneficio: <input type="number" id="porcentaje" value="15" min="0" max="100"> %</label>
+    <button onclick="actualizarPorcentaje()">Actualizar</button>
+    <button onclick="mostrarEditarCostes()">✏️ Editar Costes</button>
+    <button onclick="forzarInicializacion()" style="background: #9c27b0;">🔥 Forzar Inicio</button>
+    <button onclick="exportarConfiguracion()">📄 Exportar Config JSON</button>
+    <button onclick="exportarDatos()">📥 Exportar Todo</button>
+    <button onclick="resetearSistema()" style="background: #ff9800;">🔄 Reset Sistema</button>
+    <button onclick="borrarTodo()" style="background: #d32f2f;">🗑️ Borrar Ventas</button>
+  </div>
+  
+  <!-- Panel de edición de costes (oculto inicialmente) -->
+  <div id="panelCostes" style="display: none; background: #1a1a2e; padding: 1em; border-radius: 5px; margin: 1em 0;">
+    <h3>💰 Editar Costes</h3>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1em;">
+      <div>
+        <h4>Productos:</h4>
+        <div id="costesProductos"></div>
+      </div>
+      <div>
+        <h4>Decisiones:</h4>
+        <div id="costesDecisiones"></div>
+      </div>
+    </div>
+    <button onclick="guardarCostes()">💾 Guardar Costes</button>
+    <button onclick="cerrarEditarCostes()">❌ Cerrar</button>
+  </div>
+  
+  <div class="dashboard">
+    <div class="stat-box">
+      <div class="stat-number" id="totalVentas">0</div>
+      <div>Total Ventas</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-number" id="ingresosTotales">0 €</div>
+      <div>Ingresos Totales</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-number" id="costesTotales">0 €</div>
+      <div>Costes Totales</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-number" id="beneficioNeto">0 €</div>
+      <div>Beneficio Neto</div>
+    </div>
+  </div>
+  
+  <div class="dashboard">
+    <div class="stat-box">
+      <div class="stat-number" id="media">0 €</div>
+      <div>Media por Venta</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-number" id="mediana">0 €</div>
+      <div>Mediana</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-number" id="moda">0 €</div>
+      <div>Moda</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-number" id="desviacion">0 €</div>
+      <div>Desviación Estándar</div>
+    </div>
+  </div>
+  
+  <div class="productos-table">
+    <h3>🏷️ Análisis por Categoría</h3>
+    <table id="tablaCategorias">
+      <thead>
+        <tr>
+          <th>Categoría</th>
+          <th>Ventas</th>
+          <th>Ingresos</th>
+          <th>Costes</th>
+          <th>Beneficio</th>
+          <th>Margen %</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  
+  <div class="productos-table">
+    <h3>📈 Análisis por Producto</h3>
+    <table id="tablaProductos">
+      <thead>
+        <tr>
+          <th>Producto</th>
+          <th>Ventas</th>
+          <th>Ingresos</th>
+          <th>Costes</th>
+          <th>Beneficio</th>
+          <th>Margen %</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  
+  <div class="productos-table">
+    <h3>🎯 Análisis por Decisión</h3>
+    <table id="tablaDecisiones">
+      <thead>
+        <tr>
+          <th>Decisión</th>
+          <th>Ventas</th>
+          <th>Ingresos</th>
+          <th>Costes</th>
+          <th>Beneficio</th>
+          <th>Margen %</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  
+  <div class="productos-table">
+    <h3>📋 Detalle de Ventas Individuales</h3>
+    <div id="ventasDetalle"></div>
+  </div>
+  
+  <script>
+    // Configuración del servidor
+        // Configuración dinámica de API
+    const API_CONFIG = {
+      // Detectar automáticamente si estamos en desarrollo local o servidor remoto
+      getBaseURL: function() {
+        const hostname = window.location.hostname;
+        const isLocal = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1';
+        
+        if (isLocal) {
+          // Desarrollo local - usar servidor Python
+          return 'http://127.0.0.1:5001';
+        } else {
+          // Servidor remoto - usar API PHP
+          return window.location.origin;
+        }
+      },
+      
+      getAPIEndpoint: function(endpoint) {
+        const baseURL = this.getBaseURL();
+        const hostname = window.location.hostname;
+        const isLocal = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1';
+        
+        if (isLocal) {
+          // Desarrollo local - endpoints Python
+          return `${baseURL}/api/${endpoint}`;
+        } else {
+          // Servidor remoto - endpoints PHP
+          return `${baseURL}/api.php/${endpoint}`;
+        }
+      }
+    };
+
+    console.log('🌐 Dashboard - Configuración de API:', {
+      hostname: window.location.hostname,
+      isLocal: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1',
+      baseURL: API_CONFIG.getBaseURL(),
+      example: API_CONFIG.getAPIEndpoint('configuracion')
+    });
+    
+    // Sistema de autenticación
+    const PASSWORD_CORRECTA = "Blender 3D."; // Contraseña para acceder
+    let sesionActiva = false;
+    
+    function verificarPassword() {
+      const password = document.getElementById('passwordInput').value;
+      const errorDiv = document.getElementById('errorMessage');
+      
+      if (password === PASSWORD_CORRECTA) {
+        sesionActiva = true;
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('mainContent').style.display = 'block';
+        
+        // Guardar sesión por 1 hora
+        localStorage.setItem('sesionVentas', Date.now() + (60 * 60 * 1000));
+        
+        // Inicializar dashboard
+        inicializarDashboard();
+      } else {
+        errorDiv.textContent = '❌ Contraseña incorrecta';
+        document.getElementById('passwordInput').value = '';
+        document.getElementById('passwordInput').focus();
+      }
+    }
+    
+    function cerrarSesion() {
+      sesionActiva = false;
+      localStorage.removeItem('sesionVentas');
+      document.getElementById('loginScreen').style.display = 'flex';
+      document.getElementById('mainContent').style.display = 'none';
+      document.getElementById('passwordInput').value = '';
+      document.getElementById('errorMessage').textContent = '';
+    }
+    
+    function verificarSesion() {
+      const sesionGuardada = localStorage.getItem('sesionVentas');
+      
+      if (sesionGuardada && Date.now() < parseInt(sesionGuardada)) {
+        // Sesión válida
+        sesionActiva = true;
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('mainContent').style.display = 'block';
+        inicializarDashboard();
+      } else {
+        // Sesión expirada o no existe
+        localStorage.removeItem('sesionVentas');
+        document.getElementById('loginScreen').style.display = 'flex';
+        document.getElementById('mainContent').style.display = 'none';
+      }
+    }
+    
+    // Permitir Enter para hacer login
+    document.getElementById('passwordInput').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        verificarPassword();
+      }
+    });
+    
+    function inicializarDashboard() {
+      console.log('Inicializando dashboard...');
+      cargarConfiguracion().then(() => {
+        console.log('Configuración cargada, iniciando carga de ventas...');
+        cargarVentas();
+        // Actualizar cada 5 segundos
+        setInterval(() => {
+          if (sesionActiva) {
+            console.log('Actualizando datos...');
+            cargarVentas();
+          }
+        }, 5000);
+      }).catch(error => {
+        console.error('Error en inicialización:', error);
+        // Intentar continuar de todos modos
+        crearConfiguracionDefecto();
+        cargarVentas();
+      });
+    }
+    
+    // Variables globales
+    let configuracion = {};
+    
+    function cargarConfiguracion() {
+      console.log('🔧 Cargando configuración desde servidor...');
+      
+      // Cargar desde el servidor usando configuración dinámica
+      return fetch(API_CONFIG.getAPIEndpoint('configuracion'))
+        .then(response => response.json())
+        .then(config => {
+          configuracion = config;
+          console.log('✅ Configuración cargada desde servidor:', configuracion);
+          document.getElementById('porcentaje').value = configuracion.porcentajeBeneficio;
+        })
+        .catch(error => {
+          console.error('❌ Error al cargar configuración del servidor:', error);
+          console.log('⚠️ Usando configuración por defecto');
+          crearConfiguracionDefecto();
+        });
+    }
+    
+    function crearConfiguracionDefecto() {
+      console.log('🏗️ Creando configuración por defecto');
+      configuracion = {
+        porcentajeBeneficio: 15,
+        costes: {
+          "Manzana": 2.5,
+          "Banana": 1.5,
+          "Naranja": 2.0,
+          "Pera": 1.0,
+          "Uva": 3.0
+        },
+        costeDecisiones: {
+          "Decisión A": 5,
+          "Decisión B": 10,
+          "Decisión C": 15,
+          "Decisión D": 20
+        }
+      };
+      
+      // Guardar inmediatamente en localStorage
+      localStorage.setItem('configuracionVentas', JSON.stringify(configuracion));
+      console.log('✅ Configuración por defecto guardada en localStorage');
+    }
+    
+    function actualizarPorcentaje() {
+      const nuevoPorcentaje = parseFloat(document.getElementById('porcentaje').value);
+      configuracion.porcentajeBeneficio = nuevoPorcentaje;
+      
+      // Guardar en el servidor
+      fetch(API_CONFIG.getAPIEndpoint('configuracion'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(configuracion)
+      })
+      .then(response => response.json())
+      .then(() => {
+        console.log('✅ Configuración actualizada en servidor');
+        // También guardar en localStorage como backup
+        localStorage.setItem('configuracionVentas', JSON.stringify(configuracion));
+        cargarVentas();
+      })
+      .catch(error => {
+        console.error('❌ Error al guardar configuración en servidor:', error);
+        // Fallback a localStorage
+        localStorage.setItem('configuracionVentas', JSON.stringify(configuracion));
+        cargarVentas();
+      });
+    }
+    
+    function calcularEstadisticas(valores) {
+      if (valores.length === 0) return { media: 0, mediana: 0, moda: 0, desviacion: 0 };
+      
+      // Media
+      const media = valores.reduce((a, b) => a + b, 0) / valores.length;
+      
+      // Mediana
+      const ordenados = [...valores].sort((a, b) => a - b);
+      const medio = Math.floor(ordenados.length / 2);
+      const mediana = ordenados.length % 2 === 0 
+        ? (ordenados[medio - 1] + ordenados[medio]) / 2 
+        : ordenados[medio];
+      
+      // Moda
+      const frecuencias = {};
+      valores.forEach(v => frecuencias[v] = (frecuencias[v] || 0) + 1);
+      const maxFrecuencia = Math.max(...Object.values(frecuencias));
+      const modas = Object.keys(frecuencias).filter(k => frecuencias[k] === maxFrecuencia);
+      const moda = parseFloat(modas[0]) || 0;
+      
+      // Desviación estándar
+      const varianza = valores.reduce((acc, val) => acc + Math.pow(val - media, 2), 0) / valores.length;
+      const desviacion = Math.sqrt(varianza);
+      
+      return { media, mediana, moda, desviacion };
+    }
+    
+    function cargarVentas() {
+      // Asegurar que la configuración existe
+      if (!configuracion || Object.keys(configuracion).length === 0) {
+        console.log('Configuración no encontrada, creando por defecto');
+        crearConfiguracionDefecto();
+      }
+      
+      console.log('🔄 Intentando cargar ventas desde:', API_CONFIG.getAPIEndpoint('ventas'));
+      
+      // Cargar ventas directamente desde el endpoint de ventas
+      fetch(API_CONFIG.getAPIEndpoint('ventas'))
+        .then(response => {
+          console.log('📡 Respuesta del servidor:', response.status);
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(ventas => {
+          console.log('✅ Ventas cargadas desde servidor:', ventas.length);
+          console.log('📊 Datos de ventas recibidos:', ventas);
+          procesarYMostrarVentas(ventas);
+        })
+        .catch(error => {
+          console.error('❌ Error al cargar ventas del servidor:', error);
+          // Fallback a localStorage si el servidor no responde
+          const ventas = JSON.parse(localStorage.getItem('ventas') || '[]');
+          console.log('📦 Usando datos de localStorage como fallback:', ventas.length);
+          procesarYMostrarVentas(ventas);
+        });
+    }
+
+    function procesarYMostrarVentas(ventas) {
+      // Debug: mostrar en consola
+      console.log('Ventas a procesar:', ventas.length);
+      console.log('Primera venta de ejemplo:', ventas[0]);
+      console.log('Configuración actual:', configuracion);
+      
+      if (ventas.length === 0) {
+        document.getElementById('totalVentas').textContent = '0';
+        document.getElementById('ingresosTotales').textContent = '0 €';
+        document.getElementById('costesTotales').textContent = '0 €';
+        document.getElementById('beneficioNeto').textContent = '0 €';
+        document.getElementById('media').textContent = '0 €';
+        document.getElementById('mediana').textContent = '0 €';
+        document.getElementById('moda').textContent = '0 €';
+        document.getElementById('desviacion').textContent = '0 €';
+        
+        // Limpiar tablas
+        document.querySelector('#tablaCategorias tbody').innerHTML = '<tr><td colspan="6">No hay datos</td></tr>';
+        document.querySelector('#tablaProductos tbody').innerHTML = '<tr><td colspan="6">No hay datos</td></tr>';
+        document.querySelector('#tablaDecisiones tbody').innerHTML = '<tr><td colspan="6">No hay datos</td></tr>';
+        document.getElementById('ventasDetalle').innerHTML = '<p>No hay ventas registradas</p>';
+        return;
+      }
+      
+      // Estadísticas generales - NUEVO FORMATO
+      const totalVentas = ventas.length;
+      let ingresosTotales = 0;
+      let costesTotales = 0;
+      
+      // Calcular totales correctamente para el nuevo formato
+      ventas.forEach(venta => {
+        // El nuevo sistema usa precioFinal
+        ingresosTotales += venta.precioFinal || venta.total || 0;
+        
+        // Costos del nuevo sistema (costo + ajustes si aplica)
+        if (venta.costo !== undefined) {
+          costesTotales += venta.costo;
+        } else {
+          // Sistema anterior - usar configuración de costos
+          if (venta.casillas) {
+            venta.casillas.forEach(casilla => {
+              costesTotales += configuracion.costes[casilla.nombre] || 0;
+            });
+          }
+          if (venta.decision) {
+            const nombreDecision = venta.decision.nombre ? venta.decision.nombre.split(' (')[0] : 'Decision';
+            costesTotales += configuracion.costeDecisiones[nombreDecision] || 0;
+          }
+        }
+      });
+      
+      const beneficioNeto = ingresosTotales - costesTotales;
+      
+      // Estadísticas de distribución
+      const valoresVentas = ventas.map(v => v.precioFinal || v.total || 0);
+      const stats = calcularEstadisticas(valoresVentas);
+      
+      // Actualizar dashboard
+      document.getElementById('totalVentas').textContent = totalVentas;
+      document.getElementById('ingresosTotales').textContent = ingresosTotales.toFixed(2) + ' €';
+      document.getElementById('costesTotales').textContent = costesTotales.toFixed(2) + ' €';
+      document.getElementById('beneficioNeto').textContent = beneficioNeto.toFixed(2) + ' €';
+      document.getElementById('media').textContent = stats.media.toFixed(2) + ' €';
+      document.getElementById('mediana').textContent = stats.mediana.toFixed(2) + ' €';
+      document.getElementById('moda').textContent = stats.moda.toFixed(2) + ' €';
+      document.getElementById('desviacion').textContent = stats.desviacion.toFixed(2) + ' €';
+      
+      // Análisis por productos - ADAPTADO AL NUEVO FORMATO
+      const productosStats = {};
+      
+      ventas.forEach(venta => {
+        const nombreProducto = venta.producto || 'Producto Desconocido';
+        
+        if (!productosStats[nombreProducto]) {
+          productosStats[nombreProducto] = { ventas: 0, ingresos: 0, costes: 0 };
+        }
+        
+        productosStats[nombreProducto].ventas++;
+        productosStats[nombreProducto].ingresos += venta.precioFinal || venta.total || 0;
+        productosStats[nombreProducto].costes += venta.costo || 0;
+        
+        // Si es sistema anterior con casillas
+        if (venta.casillas) {
+          venta.casillas.forEach(casilla => {
+            const nombreCasilla = casilla.nombre;
+            if (!productosStats[nombreCasilla]) {
+              productosStats[nombreCasilla] = { ventas: 0, ingresos: 0, costes: 0 };
+            }
+            productosStats[nombreCasilla].ventas++;
+            productosStats[nombreCasilla].ingresos += casilla.valor;
+            productosStats[nombreCasilla].costes += configuracion.costes[nombreCasilla] || 0;
+          });
+        }
+      });
+      
+      // Análisis por decisiones - ADAPTADO
+      const decisionesStats = {};
+      ventas.forEach(venta => {
+        let nombreDecision = 'Venta Estándar';
+        
+        if (venta.decision && venta.decision.nombre) {
+          nombreDecision = venta.decision.nombre.split(' (')[0];
+        } else if (venta.tipo) {
+          nombreDecision = venta.tipo.charAt(0).toUpperCase() + venta.tipo.slice(1);
+        }
+        
+        if (!decisionesStats[nombreDecision]) {
+          decisionesStats[nombreDecision] = { ventas: 0, ingresos: 0, costes: 0 };
+        }
+        
+        decisionesStats[nombreDecision].ventas++;
+        
+        if (venta.decision && venta.decision.valor) {
+          decisionesStats[nombreDecision].ingresos += venta.decision.valor;
+        } else {
+          decisionesStats[nombreDecision].ingresos += venta.precioFinal || venta.total || 0;
+        }
+        
+        decisionesStats[nombreDecision].costes += configuracion.costeDecisiones[nombreDecision] || 0;
+      });
+      
+      // Análisis por categorías - ADAPTADO
+      const categoriasStats = {};
+      ventas.forEach(venta => {
+        const nombreCategoria = venta.categoria || (venta.categoriaInfo ? venta.categoriaInfo.nombre : 'General');
+        
+        if (!categoriasStats[nombreCategoria]) {
+          categoriasStats[nombreCategoria] = { ventas: 0, ingresos: 0, costes: 0 };
+        }
+        
+        categoriasStats[nombreCategoria].ventas++;
+        categoriasStats[nombreCategoria].ingresos += venta.precioFinal || venta.total || 0;
+        categoriasStats[nombreCategoria].costes += venta.costo || 0;
+        
+        // Si es sistema anterior
+        if (venta.casillas) {
+          let costesVenta = 0;
+          venta.casillas.forEach(casilla => {
+            costesVenta += configuracion.costes[casilla.nombre] || 0;
+          });
+          if (venta.decision) {
+            const nombreDecision = venta.decision.nombre.split(' (')[0];
+            costesVenta += configuracion.costeDecisiones[nombreDecision] || 0;
+          }
+          categoriasStats[nombreCategoria].costes += costesVenta;
+        }
+      });
+      
+      // Llenar tablas
+      llenarTabla('tablaCategorias', categoriasStats);
+      llenarTabla('tablaProductos', productosStats);
+      llenarTabla('tablaDecisiones', decisionesStats);
+      
+      // Mostrar detalle de ventas individuales
+      mostrarDetalleVentas(ventas);
+    }
+    
+    function mostrarDetalleVentas(ventas) {
+      const detalleDiv = document.getElementById('ventasDetalle');
+      
+      if (ventas.length === 0) {
+        detalleDiv.innerHTML = '<p>No hay ventas registradas</p>';
+        return;
+      }
+      
+      // Mostrar ventas más recientes primero
+      const ventasOrdenadas = [...ventas].reverse();
+      
+      detalleDiv.innerHTML = ventasOrdenadas.map((venta, index) => {
+        const numeroVenta = ventas.length - index;
+        
+        // Detectar si es una venta del nuevo sistema
+        const esNuevoSistema = venta.categoria && venta.producto && venta.emoji;
+        
+        if (esNuevoSistema) {
+          // Nueva estructura de venta - Sistema simplificado
+          let beneficioVenta = 0;
+          let detallesEconomicos = '';
+          
+          if (venta.costo !== undefined && venta.beneficio !== undefined) {
+            // Nuevo sistema con costo + beneficio fijo
+            beneficioVenta = venta.beneficio;
+            if (venta.vasoAjuste) {
+              beneficioVenta += venta.vasoAjuste;
+            }
+            
+            detallesEconomicos = `
+              <div>
+                <strong>💰 Desglose económico:</strong><br>
+                • Costo base: €${venta.costo.toFixed(2)}<br>
+                • Beneficio fijo: €${venta.beneficio.toFixed(2)}<br>
+                ${venta.vasoAjuste ? `• Ajuste vaso: €${venta.vasoAjuste.toFixed(2)}<br>` : ''}
+                <strong>• TOTAL: €${venta.precioFinal.toFixed(2)}</strong>
+              </div>
+            `;
+          } else {
+            // Sistema anterior con porcentajes
+            beneficioVenta = venta.precioFinal - venta.precioBase;
+            detallesEconomicos = `
+              <div>
+                <strong>💰 Desglose económico:</strong><br>
+                • Precio base: €${venta.precioBase.toFixed(2)}<br>
+                • Incremento (+${venta.porcentaje}%): €${venta.incremento.toFixed(2)}<br>
+                <strong>• TOTAL: €${venta.precioFinal.toFixed(2)}</strong>
+              </div>
+            `;
+          }
+          
+          // Información de ingredientes para productos preparados
+          let ingredientesInfo = '';
+          if (venta.tipo === 'preparado' && venta.ajustes && venta.ajustes.length > 0) {
+            ingredientesInfo = `
+              <div>
+                <strong>🛠️ Personalización:</strong><br>
+                ${venta.ajustes.map(ajuste => `• ${ajuste}`).join('<br>')}
+                ${venta.vaso ? `<br><strong>🥤 Vaso:</strong> ${venta.vaso}` : ''}
+              </div>
+            `;
+          } else if (venta.vaso) {
+            ingredientesInfo = `
+              <div>
+                <strong>🥤 Vaso/Envase:</strong> ${venta.vaso}
+              </div>
+            `;
+          }
+          
+          // Información de cantidad para vasos
+          let cantidadInfo = '';
+          if (venta.cantidad && venta.cantidad > 1) {
+            cantidadInfo = `
+              <div>
+                <strong>📦 Cantidad:</strong> ${venta.cantidad} unidades
+                ${venta.precioUnitario ? `<br><strong>💵 Precio unitario:</strong> €${venta.precioUnitario.toFixed(2)}` : ''}
+              </div>
+            `;
+          }
+          
+          return `
+            <div class="venta-detalle">
+              <div class="venta-header">
+                <span>🛒 Venta #${numeroVenta} - ${venta.emoji} ${venta.producto.toUpperCase()}</span>
+                <span>${new Date(venta.fecha).toLocaleString('es-ES')}</span>
+              </div>
+              
+              <div class="venta-items">
+                <div>
+                  <strong>📦 Producto:</strong><br>
+                  • ${venta.emoji} ${venta.producto}
+                  <br><strong>🏷️ Categoría:</strong> ${venta.categoria}
+                  <br><strong>🔧 Tipo:</strong> ${venta.tipo === 'preparado' ? 'Personalizado' : venta.tipo === 'vaso' ? 'Vaso/Envase' : 'Estándar'}
+                </div>
+                <div>
+                  ${detallesEconomicos}
+                </div>
+              </div>
+              
+              ${ingredientesInfo ? `<div class="venta-items">${ingredientesInfo}</div>` : ''}
+              ${cantidadInfo ? `<div class="venta-items">${cantidadInfo}</div>` : ''}
+              
+              <div class="venta-total">
+                <strong>💸 TOTAL VENTA: €${venta.precioFinal.toFixed(2)}</strong> | 
+                <strong>💚 BENEFICIO: €${beneficioVenta.toFixed(2)}</strong>
+              </div>
+            </div>
+          `;
+        } else {
+          // Sistema antiguo - mantener compatibilidad
+          let costesVenta = 0;
+          if (venta.casillas) {
+            venta.casillas.forEach(casilla => {
+              costesVenta += configuracion.costes[casilla.nombre] || 0;
+            });
+          }
+          if (venta.decision) {
+            const nombreDecision = venta.decision.nombre.split(' (')[0];
+            costesVenta += configuracion.costeDecisiones[nombreDecision] || 0;
+          }
+          
+          const totalVenta = venta.total || 0;
+          const beneficioVenta = totalVenta - costesVenta;
+          
+          const categoriaInfo = venta.categoriaInfo ? 
+            `${venta.categoriaInfo.emoji} ${venta.categoriaInfo.nombre}` : 
+            '📦 Categoría General';
+          
+          return `
+            <div class="venta-detalle">
+              <div class="venta-header">
+                <span>🛒 Venta #${numeroVenta} - ${categoriaInfo}</span>
+                <span>${venta.fecha}</span>
+              </div>
+              
+              <div class="venta-items">
+                <div>
+                  <strong>📦 Productos seleccionados:</strong><br>
+                  ${venta.casillas && venta.casillas.length > 0 
+                    ? venta.casillas.map(c => `• ${c.nombre}: €${c.valor.toFixed(2)}`).join('<br>')
+                    : '• Sin productos'
+                  }
+                </div>
+                <div>
+                  <strong>🎯 Decisión elegida:</strong><br>
+                  • ${venta.decision ? venta.decision.nombre : 'Sin decisión'}
+                </div>
+              </div>
+              
+              <div class="venta-items">
+                <div>
+                  <strong>💰 Desglose económico:</strong><br>
+                  • Subtotal: €${(venta.subtotal || 0).toFixed(2)}<br>
+                  • Extra (${configuracion.porcentajeBeneficio}%): €${(venta.extra || 0).toFixed(2)}<br>
+                  • Costes: €${costesVenta.toFixed(2)}
+                </div>
+                <div class="venta-total">
+                  <strong>💸 TOTAL VENTA: €${totalVenta.toFixed(2)}</strong><br>
+                  <strong style="color: ${beneficioVenta >= 0 ? '#4caf50' : '#f44336'}">💚 BENEFICIO: €${beneficioVenta.toFixed(2)}</strong>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+      }).join('');
+    }
+    
+    function llenarTabla(idTabla, datos) {
+      const tbody = document.querySelector('#' + idTabla + ' tbody');
+      tbody.innerHTML = '';
+      
+      Object.entries(datos).forEach(([nombre, stats]) => {
+        const beneficio = stats.ingresos - stats.costes;
+        const margen = stats.ingresos > 0 ? (beneficio / stats.ingresos * 100) : 0;
+        
+        const row = tbody.insertRow();
+        row.innerHTML = `
+          <td>${nombre}</td>
+          <td>${stats.ventas}</td>
+          <td class="beneficio">${stats.ingresos.toFixed(2)} €</td>
+          <td class="coste">${stats.costes.toFixed(2)} €</td>
+          <td class="beneficio">${beneficio.toFixed(2)} €</td>
+          <td>${margen.toFixed(1)}%</td>
+        `;
+      });
+    }
+    
+    function exportarDatos() {
+      // Obtener datos desde el servidor
+      Promise.all([
+        fetch(API_CONFIG.getAPIEndpoint('datos')).then(r => r.json()),
+        fetch(API_CONFIG.getAPIEndpoint('configuracion')).then(r => r.json())
+      ])
+      .then(([datosServidor, configServidor]) => {
+        const dataStr = JSON.stringify({ 
+          ventas: datosServidor.ventas || [], 
+          configuracion: configServidor 
+        }, null, 2);
+        const dataBlob = new Blob([dataStr], {type: 'application/json'});
+        const url = URL.createObjectURL(dataBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'analisis_ventas_' + new Date().toISOString().split('T')[0] + '.json';
+        link.click();
+        console.log('✅ Datos exportados desde servidor');
+      })
+      .catch(error => {
+        console.error('❌ Error al exportar datos del servidor, usando localStorage:', error);
+        // Fallback a localStorage
+        const ventas = JSON.parse(localStorage.getItem('ventas') || '[]');
+        const dataStr = JSON.stringify({ ventas, configuracion }, null, 2);
+        const dataBlob = new Blob([dataStr], {type: 'application/json'});
+        const url = URL.createObjectURL(dataBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'analisis_ventas_' + new Date().toISOString().split('T')[0] + '.json';
+        link.click();
+      });
+    }
+    
+    function exportarConfiguracion() {
+      const configStr = JSON.stringify(configuracion, null, 2);
+      const dataBlob = new Blob([configStr], {type: 'application/json'});
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'configuracion.json';
+      link.click();
+      alert('📄 Descarga la configuración y reemplaza el archivo configuracion.json');
+    }
+    
+    function mostrarEditarCostes() {
+      const panel = document.getElementById('panelCostes');
+      panel.style.display = 'block';
+      
+      // Llenar productos
+      const productosDiv = document.getElementById('costesProductos');
+      productosDiv.innerHTML = '';
+      Object.entries(configuracion.costes).forEach(([nombre, coste]) => {
+        productosDiv.innerHTML += `
+          <div style="margin: 0.5em 0;">
+            <label>${nombre}: <input type="number" id="coste_${nombre}" value="${coste}" step="0.1" min="0"> €</label>
+          </div>
+        `;
+      });
+      
+      // Llenar decisiones
+      const decisionesDiv = document.getElementById('costesDecisiones');
+      decisionesDiv.innerHTML = '';
+      Object.entries(configuracion.costeDecisiones).forEach(([nombre, coste]) => {
+        decisionesDiv.innerHTML += `
+          <div style="margin: 0.5em 0;">
+            <label>${nombre}: <input type="number" id="decision_${nombre.replace(' ', '_')}" value="${coste}" step="0.1" min="0"> €</label>
+          </div>
+        `;
+      });
+    }
+    
+    function guardarCostes() {
+      // Actualizar costes de productos
+      Object.keys(configuracion.costes).forEach(nombre => {
+        const input = document.getElementById('coste_' + nombre);
+        if (input) {
+          configuracion.costes[nombre] = parseFloat(input.value) || 0;
+        }
+      });
+      
+      // Actualizar costes de decisiones
+      Object.keys(configuracion.costeDecisiones).forEach(nombre => {
+        const input = document.getElementById('decision_' + nombre.replace(' ', '_'));
+        if (input) {
+          configuracion.costeDecisiones[nombre] = parseFloat(input.value) || 0;
+        }
+      });
+      
+      // Guardar en localStorage
+      localStorage.setItem('configuracionVentas', JSON.stringify(configuracion));
+      
+      // Actualizar dashboard
+      cargarVentas();
+      
+      // Cerrar panel
+      cerrarEditarCostes();
+      
+      // Mostrar confirmación
+      alert('✅ Costes actualizados correctamente');
+    }
+    
+    function cerrarEditarCostes() {
+      document.getElementById('panelCostes').style.display = 'none';
+    }
+    
+    function borrarTodo() {
+      if (confirm('¿Estás seguro de que quieres borrar todo el historial de ventas?')) {
+        // Borrar del servidor
+        fetch(API_CONFIG.getAPIEndpoint('ventas'), {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(response => response.json())
+        .then(resultado => {
+          if (resultado.success) {
+            console.log('✅ Ventas borradas del servidor');
+            // También borrar de localStorage como backup
+            localStorage.removeItem('ventas');
+            cargarVentas();
+            alert('✅ Historial de ventas borrado completamente');
+          } else {
+            throw new Error(resultado.error || 'Error desconocido');
+          }
+        })
+        .catch(error => {
+          console.error('❌ Error al borrar ventas del servidor:', error);
+          // Fallback: borrar solo de localStorage
+          localStorage.removeItem('ventas');
+          cargarVentas();
+          alert('⚠️ Ventas borradas solo localmente (error del servidor)');
+        });
+      }
+    }
+    
+    function resetearSistema() {
+      if (confirm('¿Resetear TODO el sistema? (configuración + ventas)')) {
+        localStorage.removeItem('ventas');
+        localStorage.removeItem('configuracionVentas');
+        crearConfiguracionDefecto();
+        document.getElementById('porcentaje').value = configuracion.porcentajeBeneficio;
+        cargarVentas();
+        alert('✅ Sistema reseteado completamente');
+      }
+    }
+    
+    function forzarInicializacion() {
+      console.log('🔥 Forzando inicialización completa...');
+      
+      // Crear configuración desde cero
+      crearConfiguracionDefecto();
+      
+      // Actualizar interfaz
+      document.getElementById('porcentaje').value = configuracion.porcentajeBeneficio;
+      
+      // Recargar ventas
+      cargarVentas();
+      
+      console.log('✅ Inicialización forzada completada');
+      alert('🔥 Sistema inicializado forzosamente\n✅ Configuración recreada\n✅ Datos cargados');
+    }
+    
+    // Verificar sesión al cargar la página
+    window.addEventListener('load', function() {
+      verificarSesion();
+      document.getElementById('passwordInput').focus();
+    });
+    
+    // Cerrar sesión automáticamente después de 1 hora de inactividad
+    setInterval(function() {
+      const sesionGuardada = localStorage.getItem('sesionVentas');
+      if (sesionGuardada && Date.now() >= parseInt(sesionGuardada)) {
+        cerrarSesion();
+      }
+    }, 60000); // Verificar cada minuto
+    
+    // Inicializar
+    cargarConfiguracion().then(() => {
+      cargarVentas();
+      setInterval(cargarVentas, 5000);
+    });
+  </script>
+</body>
+</html>

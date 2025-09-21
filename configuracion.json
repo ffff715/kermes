@@ -1,0 +1,16 @@
+{
+  "costeDecisiones": {
+    "Decisión A": 5,
+    "Decisión B": 10,
+    "Decisión C": 15,
+    "Decisión D": 20
+  },
+  "costes": {
+    "Banana": 1.5,
+    "Manzana": 2.5,
+    "Naranja": 2,
+    "Pera": 1,
+    "Uva": 3
+  },
+  "porcentajeBeneficio": 15
+}
